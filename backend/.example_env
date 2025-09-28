@@ -1,0 +1,12 @@
+# Database Configuration
+# Copy this file to .env and update the values
+
+# Development Database (local PostgreSQL)
+DATABASE_URL="postgresql://postgres:password@localhost:5432/vintage_store_dev"
+
+# Production Database (will be set when deploying)
+# DATABASE_URL="postgresql://username:password@host:port/database_name"
+
+# Application Configuration
+SECRET_KEY="your-secret-key-here-change-in-production"
+DEBUG=True
