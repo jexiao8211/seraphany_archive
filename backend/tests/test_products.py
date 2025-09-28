@@ -127,11 +127,16 @@ class TestProductEndpoints:
             "images": ["image1.jpg", "image2.jpg"]
         }
         response = client.post("/products", json=product_data)
-        assert response.status_code == 403  # Forbidden (no token provided)
+        assert response.status_code == 401  # Changed from 403 to 401 for JWT
     
-    def test_create_product_with_valid_data(self, client):
+    def test_create_product_with_valid_data(self, client, auth_helper):
         """Test creating a product with valid data (when authenticated)."""
-        # This test will be updated once we implement authentication
+        # Create authenticated user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="admin@example.com",
+            password="adminpass123"
+        )
+        
         product_data = {
             "name": "Vintage Chanel Dress",
             "description": "Beautiful vintage Chanel dress",
@@ -139,9 +144,13 @@ class TestProductEndpoints:
             "category": "dresses",
             "images": ["image1.jpg", "image2.jpg"]
         }
-        # For now, we'll expect 403 until auth is implemented
-        response = client.post("/products", json=product_data)
-        assert response.status_code == 403
+        
+        # Test creating product with authentication
+        response = client.post("/products", json=product_data, 
+                              headers=auth_helper.get_auth_headers("admin@example.com"))
+        # Note: This will return 501 Not Implemented since the endpoint is not implemented yet
+        # But it should not return 401/403 anymore
+        assert response.status_code in [200, 201, 501]  # 501 = Not Implemented
     
     def test_update_product_requires_authentication(self, client):
         """Test that PUT /products/{id} requires authentication."""
@@ -150,9 +159,9 @@ class TestProductEndpoints:
             "price": 1600.00
         }
         response = client.put("/products/1", json=product_data)
-        assert response.status_code == 403
+        assert response.status_code == 401  # Changed from 403 to 401 for JWT
     
     def test_delete_product_requires_authentication(self, client):
         """Test that DELETE /products/{id} requires authentication."""
         response = client.delete("/products/1")
-        assert response.status_code == 403
+        assert response.status_code == 401  # Changed from 403 to 401 for JWT

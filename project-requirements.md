@@ -38,7 +38,7 @@ A simple ecommerce website for a vintage designer store, targeting global custom
 - **Framework**: FastAPI
 - **Package Manager**: poetry 
 - **Database**: PostgreSQL (for scalability and data integrity)
-- **ORM**: Prisma or SQLAlchemy
+- **ORM**: SQLAlchemy with Alembic
 - **Authentication**: JWT-based or session-based
 - **Payments**: Stripe integration
 

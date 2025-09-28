@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 from decimal import Decimal
 from .models import User, Product, Order, OrderItem, OrderStatus
 from .database_config import SessionLocal
+from .auth import AuthService
 import json
 
 class DatabaseService:
@@ -187,8 +188,12 @@ class DatabaseService:
     
     # User operations
     def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a new user"""
+        """Create a new user with hashed password"""
         with self.get_session() as session:
+            # Hash the password before storing
+            hashed_password = AuthService.get_password_hash(user_data["password"])
+            user_data["password"] = hashed_password
+            
             user = User(**user_data)
             session.add(user)
             session.commit()
@@ -242,18 +247,64 @@ class DatabaseService:
                 "updatedAt": user.updated_at.isoformat()
             }
     
+    def verify_user_credentials(self, email: str, password: str) -> Optional[Dict[str, Any]]:
+        """Verify user credentials and return user data if valid"""
+        with self.get_session() as session:
+            query = select(User).where(User.email == email)
+            result = session.execute(query)
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                return None
+            
+            # Verify password
+            if not AuthService.verify_password(password, user.password):
+                return None
+            
+            return {
+                "id": user.id,
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+                "createdAt": user.created_at.isoformat(),
+                "updatedAt": user.updated_at.isoformat()
+            }
+    
     # Order operations
     def create_order(self, order_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a new order"""
+        """Create a new order with items"""
         with self.get_session() as session:
-            # Handle shipping address
+            # Handle shipping address and items
             shipping_address = order_data.pop("shipping_address", None)
+            items = order_data.pop("items", [])
             
+            # Create the order
             order = Order(**order_data)
             if shipping_address:
                 order.set_shipping_address(shipping_address)
             
             session.add(order)
+            session.flush()  # Get the order ID without committing
+            
+            # Create order items
+            order_items = []
+            for item in items:
+                order_item = OrderItem(
+                    order_id=order.id,
+                    product_id=item["product_id"],
+                    quantity=item["quantity"],
+                    price=item["price"],
+                    product_name=item["product_name"]
+                )
+                session.add(order_item)
+                order_items.append({
+                    "id": order_item.id,
+                    "product_id": order_item.product_id,
+                    "quantity": order_item.quantity,
+                    "price": float(order_item.price),
+                    "product_name": order_item.product_name
+                })
+            
             session.commit()
             session.refresh(order)
             
@@ -261,8 +312,9 @@ class DatabaseService:
                 "id": order.id,
                 "userId": order.user_id,
                 "totalAmount": float(order.total_amount),
-                "status": order.status.value,
+                "status": order.status,
                 "shippingAddress": order.get_shipping_address(),
+                "items": order_items,
                 "createdAt": order.created_at.isoformat(),
                 "updatedAt": order.updated_at.isoformat()
             }
@@ -271,7 +323,7 @@ class DatabaseService:
         """Get all orders for a user"""
         with self.get_session() as session:
             query = select(Order).where(Order.user_id == user_id).options(
-                selectinload(Order.items).selectinload(OrderItem.product)
+                selectinload(Order.items)
             ).order_by(Order.created_at.desc())
             
             result = session.execute(query)
@@ -283,24 +335,17 @@ class DatabaseService:
                 for item in order.items:
                     items_data.append({
                         "id": item.id,
-                        "productId": item.product_id,
+                        "product_id": item.product_id,
                         "quantity": item.quantity,
                         "price": float(item.price),
-                        "product": {
-                            "id": item.product.id,
-                            "name": item.product.name,
-                            "description": item.product.description,
-                            "price": float(item.product.price),
-                            "category": item.product.category,
-                            "images": item.product.get_images()
-                        }
+                        "product_name": item.product_name
                     })
                 
                 orders_data.append({
                     "id": order.id,
                     "userId": order.user_id,
                     "totalAmount": float(order.total_amount),
-                    "status": order.status.value,
+                    "status": order.status,
                     "shippingAddress": order.get_shipping_address(),
                     "items": items_data,
                     "createdAt": order.created_at.isoformat(),
@@ -313,7 +358,7 @@ class DatabaseService:
         """Get a single order by ID"""
         with self.get_session() as session:
             query = select(Order).where(Order.id == order_id).options(
-                selectinload(Order.items).selectinload(OrderItem.product),
+                selectinload(Order.items),
                 selectinload(Order.user)
             )
             
@@ -327,24 +372,17 @@ class DatabaseService:
             for item in order.items:
                 items_data.append({
                     "id": item.id,
-                    "productId": item.product_id,
+                    "product_id": item.product_id,
                     "quantity": item.quantity,
                     "price": float(item.price),
-                    "product": {
-                        "id": item.product.id,
-                        "name": item.product.name,
-                        "description": item.product.description,
-                        "price": float(item.product.price),
-                        "category": item.product.category,
-                        "images": item.product.get_images()
-                    }
+                    "product_name": item.product_name
                 })
             
             return {
                 "id": order.id,
                 "userId": order.user_id,
                 "totalAmount": float(order.total_amount),
-                "status": order.status.value,
+                "status": order.status,
                 "shippingAddress": order.get_shipping_address(),
                 "items": items_data,
                 "user": {
@@ -357,6 +395,7 @@ class DatabaseService:
                 "updatedAt": order.updated_at.isoformat()
             }
     
+    
     def update_order_status(self, order_id: int, status: str) -> Dict[str, Any]:
         """Update order status"""
         with self.get_session() as session:
@@ -367,7 +406,7 @@ class DatabaseService:
             if not order:
                 raise ValueError("Order not found")
             
-            order.status = OrderStatus(status)
+            order.status = status
             session.commit()
             session.refresh(order)
             
@@ -375,7 +414,7 @@ class DatabaseService:
                 "id": order.id,
                 "userId": order.user_id,
                 "totalAmount": float(order.total_amount),
-                "status": order.status.value,
+                "status": order.status,
                 "shippingAddress": order.get_shipping_address(),
                 "createdAt": order.created_at.isoformat(),
                 "updatedAt": order.updated_at.isoformat()

@@ -5,15 +5,16 @@ Following TDD approach - implementing endpoints to make tests pass.
 from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import os
 from .database import DatabaseService
+from .auth import AuthService
 
 # Initialize FastAPI app
 app = FastAPI(title="Vintage Store API", version="1.0.0")
 
 # Security scheme for JWT tokens
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # Dependency injection for database service
 def get_database_service() -> DatabaseService:
@@ -54,7 +55,10 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-class OrderItem(BaseModel):
+class TokenRefresh(BaseModel):
+    refresh_token: str
+
+class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int
 
@@ -66,16 +70,21 @@ class ShippingAddress(BaseModel):
     country: str
 
 class OrderCreate(BaseModel):
-    items: List[OrderItem]
+    items: List[OrderItemCreate]
     shipping_address: ShippingAddress
 
 class Order(BaseModel):
     id: int
     user_id: int
-    items: List[OrderItem]
+    items: List[Dict[str, Any]]  # Simple list of item dictionaries
     total_amount: float
     status: str
     shipping_address: ShippingAddress
+    created_at: str
+    updated_at: str
+
+class OrderStatusUpdate(BaseModel):
+    status: str
 
 # Mock data for testing (will be replaced with database)
 mock_products = [
@@ -88,23 +97,73 @@ mock_products = [
 # Mock user storage for testing
 mock_users = []
 
-# Authentication dependency (simplified for now)
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+# Authentication dependency
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: DatabaseService = Depends(get_database_service)
+):
     """Get current user from JWT token."""
-    # This is a placeholder - in real implementation, we'd decode the JWT
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication not implemented yet"
-    )
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        # Extract user ID from token
+        user_id = AuthService.get_user_id_from_token(credentials.credentials)
+        
+        # Get user from database
+        user = db.get_user(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        return User(
+            id=user["id"],
+            email=user["email"],
+            first_name=user["firstName"],
+            last_name=user["lastName"]
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 # Optional authentication dependency for endpoints that might not require auth
-async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    db: DatabaseService = Depends(get_database_service)
+):
     """Get current user from JWT token (optional)."""
-    # This is a placeholder - in real implementation, we'd decode the JWT
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication not implemented yet"
-    )
+    if not credentials:
+        return None
+    
+    try:
+        # Extract user ID from token
+        user_id = AuthService.get_user_id_from_token(credentials.credentials)
+        
+        # Get user from database
+        user = db.get_user(user_id)
+        if not user:
+            return None
+        
+        return User(
+            id=user["id"],
+            email=user["email"],
+            first_name=user["firstName"],
+            last_name=user["lastName"]
+        )
+    except Exception:
+        return None
 
 # Product endpoints
 @app.get("/products")
@@ -189,60 +248,274 @@ async def register_user(user: UserCreate, db: DatabaseService = Depends(get_data
 async def login_user(credentials: UserLogin, db: DatabaseService = Depends(get_database_service)):
     """Login user and return JWT token."""
     
-    # Get user from database
-    user = db.get_user_by_email(credentials.email)
+    # Verify user credentials
+    user = db.verify_user_credentials(credentials.email, credentials.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # In production, verify password hash
-    if user["password"] != credentials.password:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # In production, generate real JWT token
-    return Token(access_token="mock_jwt_token", token_type="bearer")
+    # Create JWT token
+    access_token = AuthService.create_access_token(data={"sub": str(user["id"])})
+    return Token(access_token=access_token, token_type="bearer")
 
 @app.get("/auth/me", response_model=User)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information."""
-    # This will be implemented when we add JWT authentication
-    pass
+    return current_user
 
 @app.post("/auth/logout")
 async def logout_user(current_user: User = Depends(get_current_user)):
     """Logout user."""
-    # This will be implemented when we add JWT authentication
-    pass
+    # For JWT tokens, logout is handled client-side by removing the token
+    # In a more sophisticated setup, you might maintain a blacklist of tokens
+    return {"message": "Successfully logged out"}
+
+@app.post("/auth/refresh", response_model=Token)
+async def refresh_token(token_data: TokenRefresh):
+    """Refresh JWT token."""
+    try:
+        # Verify the current token
+        payload = AuthService.verify_token(token_data.refresh_token)
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        
+        # Create new token
+        access_token = AuthService.create_access_token(data={"sub": user_id})
+        return Token(access_token=access_token, token_type="bearer")
+        
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials"
+        )
 
 # Order endpoints
 @app.post("/orders", response_model=Order, status_code=status.HTTP_201_CREATED)
-async def create_order(order: OrderCreate, current_user: User = Depends(get_current_user)):
+async def create_order(order: OrderCreate, current_user: User = Depends(get_current_user), db: DatabaseService = Depends(get_database_service)):
     """Create a new order (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+    try:
+        # Validate products exist and are available
+        total_amount = 0.0
+        order_items = []
+        
+        for item in order.items:
+            # Get product details
+            product = db.get_product(item.product_id)
+            if not product:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Product with ID {item.product_id} not found"
+                )
+            
+            if not product.get("is_available", True):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Product {product['name']} is not available"
+                )
+            
+            if item.quantity <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Quantity must be greater than 0"
+                )
+            
+            # Calculate item total
+            item_total = float(product["price"]) * item.quantity
+            total_amount += item_total
+            
+            order_items.append({
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "price": float(product["price"]),
+                "product_name": product["name"]
+            })
+        
+        # Create order data
+        order_data = {
+            "user_id": current_user.id,
+            "total_amount": total_amount,
+            "status": "PENDING",
+            "shipping_address": order.shipping_address.model_dump(),
+            "items": order_items
+        }
+        
+        # Create order in database
+        created_order = db.create_order(order_data)
+        
+        return Order(
+            id=created_order["id"],
+            user_id=created_order["userId"],
+            items=created_order["items"],  # Direct list of item dictionaries
+            total_amount=created_order["totalAmount"],
+            status=created_order["status"],
+            shipping_address=ShippingAddress(**created_order["shippingAddress"]),
+            created_at=created_order["createdAt"],
+            updated_at=created_order["updatedAt"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create order: {str(e)}"
+        )
 
 @app.get("/orders", response_model=List[Order])
-async def get_user_orders(current_user: User = Depends(get_current_user)):
+async def get_user_orders(current_user: User = Depends(get_current_user), db: DatabaseService = Depends(get_database_service)):
     """Get current user's orders (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+    try:
+        orders = db.get_user_orders(current_user.id)
+        
+        return [
+            Order(
+                id=order["id"],
+                user_id=order["userId"],
+                items=order["items"],  # Direct list of item dictionaries
+                total_amount=order["totalAmount"],
+                status=order["status"],
+                shipping_address=ShippingAddress(**order["shippingAddress"]),
+                created_at=order["createdAt"],
+                updated_at=order["updatedAt"]
+            ) for order in orders
+        ]
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get orders: {str(e)}"
+        )
 
 @app.get("/orders/{order_id}", response_model=Order)
-async def get_order(order_id: int, current_user: User = Depends(get_current_user)):
+async def get_order(order_id: int, current_user: User = Depends(get_current_user), db: DatabaseService = Depends(get_database_service)):
     """Get a specific order (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+    try:
+        order = db.get_order(order_id)
+        
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Order not found"
+            )
+        
+        # Check if the order belongs to the current user
+        if order["userId"] != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. You can only view your own orders."
+            )
+        
+        return Order(
+            id=order["id"],
+            user_id=order["userId"],
+            items=order["items"],  # Direct list of item dictionaries
+            total_amount=order["totalAmount"],
+            status=order["status"],
+            shipping_address=ShippingAddress(**order["shippingAddress"]),
+            created_at=order["createdAt"],
+            updated_at=order["updatedAt"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get order: {str(e)}"
+        )
 
 @app.put("/orders/{order_id}/status")
-async def update_order_status(order_id: int, status_data: dict, current_user: User = Depends(get_current_user)):
+async def update_order_status(order_id: int, status_data: OrderStatusUpdate, current_user: User = Depends(get_current_user), db: DatabaseService = Depends(get_database_service)):
     """Update order status (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+    try:
+        # First check if the order exists and belongs to the user
+        order = db.get_order(order_id)
+        
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Order not found"
+            )
+        
+        if order["userId"] != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. You can only update your own orders."
+            )
+        
+        # Validate status
+        valid_statuses = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"]
+        if status_data.status not in valid_statuses:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+            )
+        
+        # Update the order status
+        updated_order = db.update_order_status(order_id, status_data.status)
+        
+        return {
+            "message": "Order status updated successfully",
+            "order_id": updated_order["id"],
+            "new_status": updated_order["status"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update order status: {str(e)}"
+        )
 
 @app.post("/orders/{order_id}/cancel")
-async def cancel_order(order_id: int, current_user: User = Depends(get_current_user)):
+async def cancel_order(order_id: int, current_user: User = Depends(get_current_user), db: DatabaseService = Depends(get_database_service)):
     """Cancel an order (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+    try:
+        # First check if the order exists and belongs to the user
+        order = db.get_order(order_id)
+        
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Order not found"
+            )
+        
+        if order["userId"] != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. You can only cancel your own orders."
+            )
+        
+        # Check if order can be cancelled (not already delivered or cancelled)
+        if order["status"] in ["DELIVERED", "CANCELLED"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot cancel order with status: {order['status']}"
+            )
+        
+        # Cancel the order
+        updated_order = db.update_order_status(order_id, "CANCELLED")
+        
+        return {
+            "message": "Order cancelled successfully",
+            "order_id": updated_order["id"],
+            "status": updated_order["status"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cancel order: {str(e)}"
+        )
 
 # Health check endpoint
 @app.get("/health")

@@ -90,6 +90,8 @@ class TestUserEndpoints:
         assert "access_token" in data
         assert "token_type" in data
         assert data["token_type"] == "bearer"
+        # Verify it's a real JWT token (not mock)
+        assert data["access_token"] != "mock_jwt_token"
     
     def test_login_with_invalid_credentials(self, client):
         """Test login with invalid credentials returns 401."""
@@ -103,16 +105,66 @@ class TestUserEndpoints:
     def test_get_current_user_requires_authentication(self, client):
         """Test that GET /auth/me requires authentication."""
         response = client.get("/auth/me")
-        assert response.status_code == 403
+        assert response.status_code == 401  # Changed from 403 to 401 for JWT
     
-    def test_get_current_user_with_valid_token(self, client):
+    def test_get_current_user_with_valid_token(self, client, auth_helper):
         """Test getting current user with valid token."""
-        # This test will be updated once we implement JWT tokens
-        # For now, we expect 403
-        response = client.get("/auth/me")
-        assert response.status_code == 403
+        # Create and login a user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="me@example.com",
+            password="testpass123"
+        )
+        
+        # Test /auth/me with valid token
+        response = client.get("/auth/me", headers=auth_helper.get_auth_headers("me@example.com"))
+        assert response.status_code == 200
+        data = response.json()
+        assert data["email"] == "me@example.com"
+        assert data["first_name"] == "Test"
+        assert data["last_name"] == "User"
+        assert "id" in data
     
     def test_logout_requires_authentication(self, client):
         """Test that POST /auth/logout requires authentication."""
         response = client.post("/auth/logout")
-        assert response.status_code == 403
+        assert response.status_code == 401  # Changed from 403 to 401 for JWT
+    
+    def test_logout_with_valid_token(self, client, auth_helper):
+        """Test logout with valid token."""
+        # Create and login a user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="logout@example.com",
+            password="testpass123"
+        )
+        
+        # Test logout with valid token
+        response = client.post("/auth/logout", headers=auth_helper.get_auth_headers("logout@example.com"))
+        assert response.status_code == 200
+        data = response.json()
+        assert "message" in data
+        assert "logged out" in data["message"].lower()
+    
+    def test_token_refresh(self, client, auth_helper):
+        """Test token refresh functionality."""
+        # Create and login a user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="refresh@example.com",
+            password="testpass123"
+        )
+        
+        # Test token refresh
+        refresh_data = {"refresh_token": token}
+        response = client.post("/auth/refresh", json=refresh_data)
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        assert "token_type" in data
+        assert data["token_type"] == "bearer"
+        # The token should be valid (may be same if generated at same time)
+        assert len(data["access_token"]) > 0
+    
+    def test_invalid_token_returns_401(self, client):
+        """Test that invalid token returns 401."""
+        headers = {"Authorization": "Bearer invalid_token"}
+        response = client.get("/auth/me", headers=headers)
+        assert response.status_code == 401

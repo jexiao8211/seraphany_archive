@@ -47,3 +47,9 @@ def client(test_db, test_db_service):
     yield TestClient(app)
     # Clear overrides after test
     app.dependency_overrides.clear()
+
+@pytest.fixture(scope="function")
+def auth_helper(client):
+    """Create an authentication helper for tests"""
+    from tests.auth_helpers import AuthTestHelper
+    return AuthTestHelper(client)

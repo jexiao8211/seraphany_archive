@@ -102,7 +102,10 @@ class OrderItem(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     quantity = Column(Integer, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)  # Price at time of purchase
+    product_name = Column(String, nullable=False)  # Denormalized for performance
     
     # Relationships
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="order_items")
+
+
