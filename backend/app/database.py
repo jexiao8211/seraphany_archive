@@ -1,33 +1,28 @@
 """
 Database service for the Vintage Store
-Handles all database operations using Prisma ORM
+Handles all database operations using SQLAlchemy ORM
 """
-from prisma import Prisma
+from sqlalchemy.orm import Session
+from sqlalchemy import select, func, and_, or_
+from sqlalchemy.orm import selectinload
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
-import asyncio
+from .models import User, Product, Order, OrderItem, OrderStatus
+from .database_config import SessionLocal
+import json
 
 class DatabaseService:
     """Database service class for handling all database operations"""
     
     def __init__(self):
-        self.prisma = Prisma()
-        self._connected = False
+        pass
     
-    async def connect(self):
-        """Connect to the database"""
-        if not self._connected:
-            await self.prisma.connect()
-            self._connected = True
-    
-    async def disconnect(self):
-        """Disconnect from the database"""
-        if self._connected:
-            await self.prisma.disconnect()
-            self._connected = False
+    def get_session(self) -> Session:
+        """Get database session"""
+        return SessionLocal()
     
     # Product operations
-    async def get_products(
+    def get_products(
         self, 
         page: int = 1, 
         limit: int = 10, 
@@ -35,106 +30,356 @@ class DatabaseService:
         search: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get products with optional filtering and pagination"""
-        await self.connect()
-        
-        # Build where clause
-        where_clause = {"isAvailable": True}
-        if category:
-            where_clause["category"] = category
-        if search:
-            where_clause["name"] = {"contains": search, "mode": "insensitive"}
-        
-        # Get total count
-        total = await self.prisma.product.count(where=where_clause)
-        
-        # Get paginated results
-        skip = (page - 1) * limit
-        products = await self.prisma.product.find_many(
-            where=where_clause,
-            skip=skip,
-            take=limit,
-            order_by={"createdAt": "desc"}
-        )
-        
-        return {
-            "items": products,
-            "total": total,
-            "page": page,
-            "limit": limit
-        }
+        with self.get_session() as session:
+            # Build query
+            query = select(Product).where(Product.is_available == True)
+            
+            if category:
+                query = query.where(Product.category == category)
+            if search:
+                query = query.where(Product.name.ilike(f"%{search}%"))
+            
+            # Get total count
+            count_query = select(func.count(Product.id)).where(Product.is_available == True)
+            if category:
+                count_query = count_query.where(Product.category == category)
+            if search:
+                count_query = count_query.where(Product.name.ilike(f"%{search}%"))
+            
+            total_result = session.execute(count_query)
+            total = total_result.scalar()
+            
+            # Get paginated results
+            offset = (page - 1) * limit
+            query = query.order_by(Product.created_at.desc()).offset(offset).limit(limit)
+            
+            result = session.execute(query)
+            products = result.scalars().all()
+            
+            # Convert to dict format
+            products_data = []
+            for product in products:
+                product_dict = {
+                    "id": product.id,
+                    "name": product.name,
+                    "description": product.description,
+                    "price": float(product.price),
+                    "category": product.category,
+                    "images": product.get_images(),
+                    "isAvailable": product.is_available,
+                    "createdAt": product.created_at.isoformat(),
+                    "updatedAt": product.updated_at.isoformat()
+                }
+                products_data.append(product_dict)
+            
+            return {
+                "items": products_data,
+                "total": total,
+                "page": page,
+                "limit": limit
+            }
     
-    async def get_product(self, product_id: int) -> Optional[Dict[str, Any]]:
+    def get_product(self, product_id: int) -> Optional[Dict[str, Any]]:
         """Get a single product by ID"""
-        await self.connect()
-        return await self.prisma.product.find_unique(where={"id": product_id})
+        with self.get_session() as session:
+            query = select(Product).where(Product.id == product_id)
+            result = session.execute(query)
+            product = result.scalar_one_or_none()
+            
+            if not product:
+                return None
+            
+            return {
+                "id": product.id,
+                "name": product.name,
+                "description": product.description,
+                "price": float(product.price),
+                "category": product.category,
+                "images": product.get_images(),
+                "isAvailable": product.is_available,
+                "createdAt": product.created_at.isoformat(),
+                "updatedAt": product.updated_at.isoformat()
+            }
     
-    async def create_product(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_product(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new product"""
-        await self.connect()
-        return await self.prisma.product.create(data=product_data)
+        with self.get_session() as session:
+            # Handle images list
+            images = product_data.pop("images", [])
+            
+            product = Product(**product_data)
+            product.set_images(images)
+            
+            session.add(product)
+            session.commit()
+            session.refresh(product)
+            
+            return {
+                "id": product.id,
+                "name": product.name,
+                "description": product.description,
+                "price": float(product.price),
+                "category": product.category,
+                "images": product.get_images(),
+                "isAvailable": product.is_available,
+                "createdAt": product.created_at.isoformat(),
+                "updatedAt": product.updated_at.isoformat()
+            }
     
-    async def update_product(self, product_id: int, product_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_product(self, product_id: int, product_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update a product"""
-        await self.connect()
-        return await self.prisma.product.update(
-            where={"id": product_id},
-            data=product_data
-        )
+        with self.get_session() as session:
+            query = select(Product).where(Product.id == product_id)
+            result = session.execute(query)
+            product = result.scalar_one_or_none()
+            
+            if not product:
+                raise ValueError("Product not found")
+            
+            # Handle images if provided
+            if "images" in product_data:
+                product.set_images(product_data.pop("images"))
+            
+            # Update other fields
+            for key, value in product_data.items():
+                setattr(product, key, value)
+            
+            session.commit()
+            session.refresh(product)
+            
+            return {
+                "id": product.id,
+                "name": product.name,
+                "description": product.description,
+                "price": float(product.price),
+                "category": product.category,
+                "images": product.get_images(),
+                "isAvailable": product.is_available,
+                "createdAt": product.created_at.isoformat(),
+                "updatedAt": product.updated_at.isoformat()
+            }
     
-    async def delete_product(self, product_id: int) -> Dict[str, Any]:
+    def delete_product(self, product_id: int) -> Dict[str, Any]:
         """Delete a product (soft delete by setting isAvailable to False)"""
-        await self.connect()
-        return await self.prisma.product.update(
-            where={"id": product_id},
-            data={"isAvailable": False}
-        )
+        with self.get_session() as session:
+            query = select(Product).where(Product.id == product_id)
+            result = session.execute(query)
+            product = result.scalar_one_or_none()
+            
+            if not product:
+                raise ValueError("Product not found")
+            
+            product.is_available = False
+            session.commit()
+            session.refresh(product)
+            
+            return {
+                "id": product.id,
+                "name": product.name,
+                "description": product.description,
+                "price": float(product.price),
+                "category": product.category,
+                "images": product.get_images(),
+                "isAvailable": product.is_available,
+                "createdAt": product.created_at.isoformat(),
+                "updatedAt": product.updated_at.isoformat()
+            }
     
     # User operations
-    async def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new user"""
-        await self.connect()
-        return await self.prisma.user.create(data=user_data)
+        with self.get_session() as session:
+            user = User(**user_data)
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            
+            return {
+                "id": user.id,
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+                "createdAt": user.created_at.isoformat(),
+                "updatedAt": user.updated_at.isoformat()
+            }
     
-    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""
-        await self.connect()
-        return await self.prisma.user.find_unique(where={"email": email})
+        with self.get_session() as session:
+            query = select(User).where(User.email == email)
+            result = session.execute(query)
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                return None
+            
+            return {
+                "id": user.id,
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+                "password": user.password,
+                "createdAt": user.created_at.isoformat(),
+                "updatedAt": user.updated_at.isoformat()
+            }
     
-    async def get_user(self, user_id: int) -> Optional[Dict[str, Any]]:
+    def get_user(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get user by ID"""
-        await self.connect()
-        return await self.prisma.user.find_unique(where={"id": user_id})
+        with self.get_session() as session:
+            query = select(User).where(User.id == user_id)
+            result = session.execute(query)
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                return None
+            
+            return {
+                "id": user.id,
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+                "createdAt": user.created_at.isoformat(),
+                "updatedAt": user.updated_at.isoformat()
+            }
     
     # Order operations
-    async def create_order(self, order_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_order(self, order_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new order"""
-        await self.connect()
-        return await self.prisma.order.create(data=order_data)
+        with self.get_session() as session:
+            # Handle shipping address
+            shipping_address = order_data.pop("shipping_address", None)
+            
+            order = Order(**order_data)
+            if shipping_address:
+                order.set_shipping_address(shipping_address)
+            
+            session.add(order)
+            session.commit()
+            session.refresh(order)
+            
+            return {
+                "id": order.id,
+                "userId": order.user_id,
+                "totalAmount": float(order.total_amount),
+                "status": order.status.value,
+                "shippingAddress": order.get_shipping_address(),
+                "createdAt": order.created_at.isoformat(),
+                "updatedAt": order.updated_at.isoformat()
+            }
     
-    async def get_user_orders(self, user_id: int) -> List[Dict[str, Any]]:
+    def get_user_orders(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all orders for a user"""
-        await self.connect()
-        return await self.prisma.order.find_many(
-            where={"userId": user_id},
-            include={"items": {"include": {"product": True}}},
-            order_by={"createdAt": "desc"}
-        )
+        with self.get_session() as session:
+            query = select(Order).where(Order.user_id == user_id).options(
+                selectinload(Order.items).selectinload(OrderItem.product)
+            ).order_by(Order.created_at.desc())
+            
+            result = session.execute(query)
+            orders = result.scalars().all()
+            
+            orders_data = []
+            for order in orders:
+                items_data = []
+                for item in order.items:
+                    items_data.append({
+                        "id": item.id,
+                        "productId": item.product_id,
+                        "quantity": item.quantity,
+                        "price": float(item.price),
+                        "product": {
+                            "id": item.product.id,
+                            "name": item.product.name,
+                            "description": item.product.description,
+                            "price": float(item.product.price),
+                            "category": item.product.category,
+                            "images": item.product.get_images()
+                        }
+                    })
+                
+                orders_data.append({
+                    "id": order.id,
+                    "userId": order.user_id,
+                    "totalAmount": float(order.total_amount),
+                    "status": order.status.value,
+                    "shippingAddress": order.get_shipping_address(),
+                    "items": items_data,
+                    "createdAt": order.created_at.isoformat(),
+                    "updatedAt": order.updated_at.isoformat()
+                })
+            
+            return orders_data
     
-    async def get_order(self, order_id: int) -> Optional[Dict[str, Any]]:
+    def get_order(self, order_id: int) -> Optional[Dict[str, Any]]:
         """Get a single order by ID"""
-        await self.connect()
-        return await self.prisma.order.find_unique(
-            where={"id": order_id},
-            include={"items": {"include": {"product": True}}, "user": True}
-        )
+        with self.get_session() as session:
+            query = select(Order).where(Order.id == order_id).options(
+                selectinload(Order.items).selectinload(OrderItem.product),
+                selectinload(Order.user)
+            )
+            
+            result = session.execute(query)
+            order = result.scalar_one_or_none()
+            
+            if not order:
+                return None
+            
+            items_data = []
+            for item in order.items:
+                items_data.append({
+                    "id": item.id,
+                    "productId": item.product_id,
+                    "quantity": item.quantity,
+                    "price": float(item.price),
+                    "product": {
+                        "id": item.product.id,
+                        "name": item.product.name,
+                        "description": item.product.description,
+                        "price": float(item.product.price),
+                        "category": item.product.category,
+                        "images": item.product.get_images()
+                    }
+                })
+            
+            return {
+                "id": order.id,
+                "userId": order.user_id,
+                "totalAmount": float(order.total_amount),
+                "status": order.status.value,
+                "shippingAddress": order.get_shipping_address(),
+                "items": items_data,
+                "user": {
+                    "id": order.user.id,
+                    "email": order.user.email,
+                    "firstName": order.user.first_name,
+                    "lastName": order.user.last_name
+                },
+                "createdAt": order.created_at.isoformat(),
+                "updatedAt": order.updated_at.isoformat()
+            }
     
-    async def update_order_status(self, order_id: int, status: str) -> Dict[str, Any]:
+    def update_order_status(self, order_id: int, status: str) -> Dict[str, Any]:
         """Update order status"""
-        await self.connect()
-        return await self.prisma.order.update(
-            where={"id": order_id},
-            data={"status": status}
-        )
+        with self.get_session() as session:
+            query = select(Order).where(Order.id == order_id)
+            result = session.execute(query)
+            order = result.scalar_one_or_none()
+            
+            if not order:
+                raise ValueError("Order not found")
+            
+            order.status = OrderStatus(status)
+            session.commit()
+            session.refresh(order)
+            
+            return {
+                "id": order.id,
+                "userId": order.user_id,
+                "totalAmount": float(order.total_amount),
+                "status": order.status.value,
+                "shippingAddress": order.get_shipping_address(),
+                "createdAt": order.created_at.isoformat(),
+                "updatedAt": order.updated_at.isoformat()
+            }
 
 # Global database service instance
 db = DatabaseService()

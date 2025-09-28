@@ -5,14 +5,14 @@ Following TDD approach - tests written before implementation.
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-
-client = TestClient(app)
+# from app.database import db  # We'll use test_db_service instead
+from app.models import User
 
 
 class TestUserEndpoints:
     """Test cases for user API endpoints."""
     
-    def test_register_user_with_valid_data(self):
+    def test_register_user_with_valid_data(self, client, test_db):
         """Test user registration with valid data."""
         user_data = {
             "email": "test@example.com",
@@ -29,7 +29,7 @@ class TestUserEndpoints:
         assert "last_name" in data
         assert "password" not in data  # Password should not be returned
     
-    def test_register_user_with_existing_email(self):
+    def test_register_user_with_existing_email(self, client, test_db):
         """Test that registering with existing email returns 400."""
         user_data = {
             "email": "existing@example.com",
@@ -46,7 +46,7 @@ class TestUserEndpoints:
         assert response2.status_code == 400
         assert "email" in response2.json()["detail"].lower()
     
-    def test_register_user_with_invalid_email(self):
+    def test_register_user_with_invalid_email(self, client):
         """Test that invalid email format returns 422."""
         user_data = {
             "email": "invalid-email",
@@ -57,7 +57,7 @@ class TestUserEndpoints:
         response = client.post("/auth/register", json=user_data)
         assert response.status_code == 422  # Pydantic validation error
     
-    def test_register_user_with_weak_password(self):
+    def test_register_user_with_weak_password(self, client):
         """Test that weak password returns 400."""
         user_data = {
             "email": "test@example.com",
@@ -68,7 +68,7 @@ class TestUserEndpoints:
         response = client.post("/auth/register", json=user_data)
         assert response.status_code == 400
     
-    def test_login_with_valid_credentials(self):
+    def test_login_with_valid_credentials(self, client):
         """Test login with valid credentials."""
         # First register a user
         user_data = {
@@ -91,7 +91,7 @@ class TestUserEndpoints:
         assert "token_type" in data
         assert data["token_type"] == "bearer"
     
-    def test_login_with_invalid_credentials(self):
+    def test_login_with_invalid_credentials(self, client):
         """Test login with invalid credentials returns 401."""
         login_data = {
             "email": "nonexistent@example.com",
@@ -100,19 +100,19 @@ class TestUserEndpoints:
         response = client.post("/auth/login", json=login_data)
         assert response.status_code == 401
     
-    def test_get_current_user_requires_authentication(self):
+    def test_get_current_user_requires_authentication(self, client):
         """Test that GET /auth/me requires authentication."""
         response = client.get("/auth/me")
         assert response.status_code == 403
     
-    def test_get_current_user_with_valid_token(self):
+    def test_get_current_user_with_valid_token(self, client):
         """Test getting current user with valid token."""
         # This test will be updated once we implement JWT tokens
         # For now, we expect 403
         response = client.get("/auth/me")
         assert response.status_code == 403
     
-    def test_logout_requires_authentication(self):
+    def test_logout_requires_authentication(self, client):
         """Test that POST /auth/logout requires authentication."""
         response = client.post("/auth/logout")
         assert response.status_code == 403

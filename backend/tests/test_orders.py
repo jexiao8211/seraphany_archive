@@ -6,13 +6,11 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
-client = TestClient(app)
-
 
 class TestOrderEndpoints:
     """Test cases for order API endpoints."""
     
-    def test_create_order_requires_authentication(self):
+    def test_create_order_requires_authentication(self, client):
         """Test that POST /orders requires authentication."""
         order_data = {
             "items": [
@@ -30,7 +28,7 @@ class TestOrderEndpoints:
         response = client.post("/orders", json=order_data)
         assert response.status_code == 403
     
-    def test_create_order_with_valid_data(self):
+    def test_create_order_with_valid_data(self, client):
         """Test creating an order with valid data (when authenticated)."""
         # This test will be updated once we implement authentication
         order_data = {
@@ -50,7 +48,7 @@ class TestOrderEndpoints:
         response = client.post("/orders", json=order_data)
         assert response.status_code == 403
     
-    def test_create_order_with_invalid_product_id(self):
+    def test_create_order_with_invalid_product_id(self, client):
         """Test creating order with non-existent product returns 400."""
         order_data = {
             "items": [
@@ -68,7 +66,7 @@ class TestOrderEndpoints:
         response = client.post("/orders", json=order_data)
         assert response.status_code == 403  # Auth required first
     
-    def test_create_order_with_zero_quantity(self):
+    def test_create_order_with_zero_quantity(self, client):
         """Test that zero quantity returns 400."""
         order_data = {
             "items": [
@@ -85,41 +83,41 @@ class TestOrderEndpoints:
         response = client.post("/orders", json=order_data)
         assert response.status_code == 403  # Auth required first
     
-    def test_get_user_orders_requires_authentication(self):
+    def test_get_user_orders_requires_authentication(self, client):
         """Test that GET /orders requires authentication."""
         response = client.get("/orders")
         assert response.status_code == 403
     
-    def test_get_user_orders_with_valid_token(self):
+    def test_get_user_orders_with_valid_token(self, client):
         """Test getting user orders with valid token."""
         # This test will be updated once we implement authentication
         response = client.get("/orders")
         assert response.status_code == 403
     
-    def test_get_single_order_requires_authentication(self):
+    def test_get_single_order_requires_authentication(self, client):
         """Test that GET /orders/{id} requires authentication."""
         response = client.get("/orders/1")
         assert response.status_code == 403
     
-    def test_get_single_order_with_valid_token(self):
+    def test_get_single_order_with_valid_token(self, client):
         """Test getting single order with valid token."""
         # This test will be updated once we implement authentication
         response = client.get("/orders/1")
         assert response.status_code == 403
     
-    def test_get_order_from_different_user_returns_403(self):
+    def test_get_order_from_different_user_returns_403(self, client):
         """Test that users can only access their own orders."""
         # This test will be updated once we implement authentication and authorization
         response = client.get("/orders/1")
         assert response.status_code == 403  # Auth required first
     
-    def test_update_order_status_requires_authentication(self):
+    def test_update_order_status_requires_authentication(self, client):
         """Test that PUT /orders/{id}/status requires authentication."""
         status_data = {"status": "shipped"}
         response = client.put("/orders/1/status", json=status_data)
         assert response.status_code == 403
     
-    def test_cancel_order_requires_authentication(self):
+    def test_cancel_order_requires_authentication(self, client):
         """Test that POST /orders/{id}/cancel requires authentication."""
         response = client.post("/orders/1/cancel")
         assert response.status_code == 403

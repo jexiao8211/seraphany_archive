@@ -7,12 +7,18 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 import os
+from .database import DatabaseService
 
 # Initialize FastAPI app
 app = FastAPI(title="Vintage Store API", version="1.0.0")
 
 # Security scheme for JWT tokens
 security = HTTPBearer()
+
+# Dependency injection for database service
+def get_database_service() -> DatabaseService:
+    """Get database service instance"""
+    return DatabaseService()
 
 # Pydantic models for request/response
 class ProductBase(BaseModel):
@@ -107,41 +113,26 @@ async def get_products(
     page: int = 1, 
     limit: int = 10, 
     category: Optional[str] = None, 
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    db: DatabaseService = Depends(get_database_service)
 ):
     """Get products with optional filtering and pagination."""
-    products = mock_products.copy()
-    
-    # Apply filters
-    if category:
-        products = [p for p in products if p.category == category]
-    if search:
-        products = [p for p in products if search.lower() in p.name.lower()]
-    
     # Check if query parameters were provided
     has_query_params = bool(request.query_params)
     
-    # Always return paginated format when query parameters are present
-    # or when filters are applied
+    # Use database service when query parameters are present
     if has_query_params or category or search:
-        start = (page - 1) * limit
-        end = start + limit
-        paginated_products = products[start:end]
-        
-        return {
-            "items": paginated_products,
-            "total": len(products),
-            "page": page,
-            "limit": limit
-        }
+        result = db.get_products(page=page, limit=limit, category=category, search=search)
+        return result
     
-    # Return simple list for basic GET /products (no query params)
-    return products
+    # For basic GET /products (no query params), return simple list
+    result = db.get_products(page=page, limit=limit)
+    return result["items"]
 
 @app.get("/products/{product_id}")
-async def get_product(product_id: int):
+async def get_product(product_id: int, db: DatabaseService = Depends(get_database_service)):
     """Get a single product by ID."""
-    product = next((p for p in mock_products if p.id == product_id), None)
+    product = db.get_product(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
@@ -166,34 +157,48 @@ async def delete_product(product_id: int, current_user: User = Depends(get_curre
 
 # Authentication endpoints
 @app.post("/auth/register", response_model=User, status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserCreate):
+async def register_user(user: UserCreate, db: DatabaseService = Depends(get_database_service)):
     """Register a new user."""
+    
     # Basic validation
     if len(user.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     
-    # Check if user already exists in mock storage
-    for existing_user in mock_users:
-        if existing_user.email == user.email:
-            raise HTTPException(status_code=400, detail="Email already registered")
+    # Check if user already exists
+    existing_user = db.get_user_by_email(user.email)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create user (mock response)
-    new_user = User(
-        id=len(mock_users) + 1,
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name
+    # Create user
+    user_data = {
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "password": user.password  # In production, hash this password
+    }
+    
+    new_user = db.create_user(user_data)
+    return User(
+        id=new_user["id"],
+        email=new_user["email"],
+        first_name=new_user["firstName"],
+        last_name=new_user["lastName"]
     )
-    mock_users.append(new_user)
-    return new_user
 
 @app.post("/auth/login", response_model=Token)
-async def login_user(credentials: UserLogin):
+async def login_user(credentials: UserLogin, db: DatabaseService = Depends(get_database_service)):
     """Login user and return JWT token."""
-    # Mock authentication - in real implementation, we'd verify password hash
-    if credentials.email == "nonexistent@example.com" or credentials.password != "securepassword123":
+    
+    # Get user from database
+    user = db.get_user_by_email(credentials.email)
+    if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # In production, verify password hash
+    if user["password"] != credentials.password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # In production, generate real JWT token
     return Token(access_token="mock_jwt_token", token_type="bearer")
 
 @app.get("/auth/me", response_model=User)
