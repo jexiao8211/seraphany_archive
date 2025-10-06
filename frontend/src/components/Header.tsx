@@ -16,61 +16,61 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header className="header">
+      <div className="header-container">
+        <div className="header-content">
           {/* Logo */}
-          <Link to="/" className="text-2xl font-bold text-gray-900">
+          <Link to="/" className="header-logo">
             Vintage Store
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-gray-900">
+          <nav className="header-nav">
+            <Link to="/" className="header-nav-link">
               Home
             </Link>
-            <Link to="/products" className="text-gray-700 hover:text-gray-900">
+            <Link to="/products" className="header-nav-link">
               Products
             </Link>
-            <Link to="/cart" className="text-gray-700 hover:text-gray-900">
+            <Link to="/cart" className="header-nav-link">
               Cart ({getItemCount()})
             </Link>
           </nav>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-lg mx-8">
+          <div className="header-search">
             <input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="header-search-input"
             />
           </div>
 
           {/* Auth Section */}
-          <div className="flex items-center space-x-4">
+          <div className="header-auth">
             {user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">
+              <>
+                <span className="header-user-name">
                   {user.first_name} {user.last_name}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-700 hover:text-gray-900"
+                  className="header-auth-button"
                 >
                   Logout
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/login" className="text-gray-700 hover:text-gray-900">
+              <>
+                <Link to="/login" className="header-auth-link">
                   Login
                 </Link>
-                <Link to="/register" className="text-gray-700 hover:text-gray-900">
+                <Link to="/register" className="header-auth-link">
                   Register
                 </Link>
-              </div>
+              </>
             )}
           </div>
         </div>

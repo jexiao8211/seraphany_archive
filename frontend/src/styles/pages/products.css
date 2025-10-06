@@ -1,0 +1,18 @@
+/**
+ * Products Page Styles
+ */
+
+.products-page {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.products-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Products will use ProductList component styles */
+

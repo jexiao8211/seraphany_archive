@@ -67,9 +67,9 @@ class DatabaseService:
                     "price": float(product.price),
                     "category": product.category,
                     "images": product.get_images(),
-                    "isAvailable": product.is_available,
-                    "createdAt": product.created_at.isoformat(),
-                    "updatedAt": product.updated_at.isoformat()
+                    "is_available": product.is_available,
+                    "created_at": product.created_at.isoformat(),
+                    "updated_at": product.updated_at.isoformat()
                 }
                 products_data.append(product_dict)
             
@@ -97,9 +97,9 @@ class DatabaseService:
                 "price": float(product.price),
                 "category": product.category,
                 "images": product.get_images(),
-                "isAvailable": product.is_available,
-                "createdAt": product.created_at.isoformat(),
-                "updatedAt": product.updated_at.isoformat()
+                "is_available": product.is_available,
+                "created_at": product.created_at.isoformat(),
+                "updated_at": product.updated_at.isoformat()
             }
     
     def create_product(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -122,9 +122,9 @@ class DatabaseService:
                 "price": float(product.price),
                 "category": product.category,
                 "images": product.get_images(),
-                "isAvailable": product.is_available,
-                "createdAt": product.created_at.isoformat(),
-                "updatedAt": product.updated_at.isoformat()
+                "is_available": product.is_available,
+                "created_at": product.created_at.isoformat(),
+                "updated_at": product.updated_at.isoformat()
             }
     
     def update_product(self, product_id: int, product_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -155,13 +155,13 @@ class DatabaseService:
                 "price": float(product.price),
                 "category": product.category,
                 "images": product.get_images(),
-                "isAvailable": product.is_available,
-                "createdAt": product.created_at.isoformat(),
-                "updatedAt": product.updated_at.isoformat()
+                "is_available": product.is_available,
+                "created_at": product.created_at.isoformat(),
+                "updated_at": product.updated_at.isoformat()
             }
     
     def delete_product(self, product_id: int) -> Dict[str, Any]:
-        """Delete a product (soft delete by setting isAvailable to False)"""
+        """Delete a product (soft delete by setting is_available to False)"""
         with self.get_session() as session:
             query = select(Product).where(Product.id == product_id)
             result = session.execute(query)
@@ -181,9 +181,9 @@ class DatabaseService:
                 "price": float(product.price),
                 "category": product.category,
                 "images": product.get_images(),
-                "isAvailable": product.is_available,
-                "createdAt": product.created_at.isoformat(),
-                "updatedAt": product.updated_at.isoformat()
+                "is_available": product.is_available,
+                "created_at": product.created_at.isoformat(),
+                "updated_at": product.updated_at.isoformat()
             }
     
     # User operations
@@ -202,10 +202,10 @@ class DatabaseService:
             return {
                 "id": user.id,
                 "email": user.email,
-                "firstName": user.first_name,
-                "lastName": user.last_name,
-                "createdAt": user.created_at.isoformat(),
-                "updatedAt": user.updated_at.isoformat()
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "created_at": user.created_at.isoformat(),
+                "updated_at": user.updated_at.isoformat()
             }
     
     def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
@@ -221,11 +221,11 @@ class DatabaseService:
             return {
                 "id": user.id,
                 "email": user.email,
-                "firstName": user.first_name,
-                "lastName": user.last_name,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
                 "password": user.password,
-                "createdAt": user.created_at.isoformat(),
-                "updatedAt": user.updated_at.isoformat()
+                "created_at": user.created_at.isoformat(),
+                "updated_at": user.updated_at.isoformat()
             }
     
     def get_user(self, user_id: int) -> Optional[Dict[str, Any]]:
@@ -241,10 +241,10 @@ class DatabaseService:
             return {
                 "id": user.id,
                 "email": user.email,
-                "firstName": user.first_name,
-                "lastName": user.last_name,
-                "createdAt": user.created_at.isoformat(),
-                "updatedAt": user.updated_at.isoformat()
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "created_at": user.created_at.isoformat(),
+                "updated_at": user.updated_at.isoformat()
             }
     
     def verify_user_credentials(self, email: str, password: str) -> Optional[Dict[str, Any]]:
@@ -264,10 +264,10 @@ class DatabaseService:
             return {
                 "id": user.id,
                 "email": user.email,
-                "firstName": user.first_name,
-                "lastName": user.last_name,
-                "createdAt": user.created_at.isoformat(),
-                "updatedAt": user.updated_at.isoformat()
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "created_at": user.created_at.isoformat(),
+                "updated_at": user.updated_at.isoformat()
             }
     
     # Order operations
@@ -310,13 +310,13 @@ class DatabaseService:
             
             return {
                 "id": order.id,
-                "userId": order.user_id,
-                "totalAmount": float(order.total_amount),
+                "user_id": order.user_id,
+                "total_amount": float(order.total_amount),
                 "status": order.status,
-                "shippingAddress": order.get_shipping_address(),
+                "shipping_address": order.get_shipping_address(),
                 "items": order_items,
-                "createdAt": order.created_at.isoformat(),
-                "updatedAt": order.updated_at.isoformat()
+                "created_at": order.created_at.isoformat(),
+                "updated_at": order.updated_at.isoformat()
             }
     
     def get_user_orders(self, user_id: int) -> List[Dict[str, Any]]:
@@ -343,13 +343,13 @@ class DatabaseService:
                 
                 orders_data.append({
                     "id": order.id,
-                    "userId": order.user_id,
-                    "totalAmount": float(order.total_amount),
+                    "user_id": order.user_id,
+                    "total_amount": float(order.total_amount),
                     "status": order.status,
-                    "shippingAddress": order.get_shipping_address(),
+                    "shipping_address": order.get_shipping_address(),
                     "items": items_data,
-                    "createdAt": order.created_at.isoformat(),
-                    "updatedAt": order.updated_at.isoformat()
+                    "created_at": order.created_at.isoformat(),
+                    "updated_at": order.updated_at.isoformat()
                 })
             
             return orders_data
@@ -380,19 +380,19 @@ class DatabaseService:
             
             return {
                 "id": order.id,
-                "userId": order.user_id,
-                "totalAmount": float(order.total_amount),
+                "user_id": order.user_id,
+                "total_amount": float(order.total_amount),
                 "status": order.status,
-                "shippingAddress": order.get_shipping_address(),
+                    "shipping_address": order.get_shipping_address(),
                 "items": items_data,
                 "user": {
                     "id": order.user.id,
                     "email": order.user.email,
-                    "firstName": order.user.first_name,
-                    "lastName": order.user.last_name
+                    "first_name": order.user.first_name,
+                    "last_name": order.user.last_name
                 },
-                "createdAt": order.created_at.isoformat(),
-                "updatedAt": order.updated_at.isoformat()
+                "created_at": order.created_at.isoformat(),
+                "updated_at": order.updated_at.isoformat()
             }
     
     
@@ -412,12 +412,12 @@ class DatabaseService:
             
             return {
                 "id": order.id,
-                "userId": order.user_id,
-                "totalAmount": float(order.total_amount),
+                "user_id": order.user_id,
+                "total_amount": float(order.total_amount),
                 "status": order.status,
-                "shippingAddress": order.get_shipping_address(),
-                "createdAt": order.created_at.isoformat(),
-                "updatedAt": order.updated_at.isoformat()
+                    "shipping_address": order.get_shipping_address(),
+                "created_at": order.created_at.isoformat(),
+                "updated_at": order.updated_at.isoformat()
             }
 
 # Global database service instance

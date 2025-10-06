@@ -3,6 +3,7 @@ Main FastAPI application for vintage store backend.
 Following TDD approach - implementing endpoints to make tests pass.
 """
 from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Dict, Any
@@ -12,6 +13,15 @@ from .auth import AuthService
 
 # Initialize FastAPI app
 app = FastAPI(title="Vintage Store API", version="1.0.0")
+
+# Configure CORS for frontend communication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Vite dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Security scheme for JWT tokens
 security = HTTPBearer(auto_error=False)
@@ -126,8 +136,8 @@ async def get_current_user(
         return User(
             id=user["id"],
             email=user["email"],
-            first_name=user["firstName"],
-            last_name=user["lastName"]
+            first_name=user["first_name"],
+            last_name=user["last_name"]
         )
     except HTTPException:
         raise
@@ -159,8 +169,8 @@ async def get_current_user_optional(
         return User(
             id=user["id"],
             email=user["email"],
-            first_name=user["firstName"],
-            last_name=user["lastName"]
+            first_name=user["first_name"],
+            last_name=user["last_name"]
         )
     except Exception:
         return None
@@ -168,25 +178,16 @@ async def get_current_user_optional(
 # Product endpoints
 @app.get("/products")
 async def get_products(
-    request: Request,
     page: int = 1, 
-    limit: int = 10, 
+    limit: int = 100,  # Increased default for better UX
     category: Optional[str] = None, 
     search: Optional[str] = None,
     db: DatabaseService = Depends(get_database_service)
 ):
     """Get products with optional filtering and pagination."""
-    # Check if query parameters were provided
-    has_query_params = bool(request.query_params)
-    
-    # Use database service when query parameters are present
-    if has_query_params or category or search:
-        result = db.get_products(page=page, limit=limit, category=category, search=search)
-        return result
-    
-    # For basic GET /products (no query params), return simple list
-    result = db.get_products(page=page, limit=limit)
-    return result["items"]
+    # Always return consistent format with pagination metadata
+    result = db.get_products(page=page, limit=limit, category=category, search=search)
+    return result
 
 @app.get("/products/{product_id}")
 async def get_product(product_id: int, db: DatabaseService = Depends(get_database_service)):
@@ -240,8 +241,8 @@ async def register_user(user: UserCreate, db: DatabaseService = Depends(get_data
     return User(
         id=new_user["id"],
         email=new_user["email"],
-        first_name=new_user["firstName"],
-        last_name=new_user["lastName"]
+        first_name=new_user["first_name"],
+        last_name=new_user["last_name"]
     )
 
 @app.post("/auth/login", response_model=Token)
@@ -350,13 +351,13 @@ async def create_order(order: OrderCreate, current_user: User = Depends(get_curr
         
         return Order(
             id=created_order["id"],
-            user_id=created_order["userId"],
+            user_id=created_order["user_id"],
             items=created_order["items"],  # Direct list of item dictionaries
-            total_amount=created_order["totalAmount"],
+            total_amount=created_order["total_amount"],
             status=created_order["status"],
-            shipping_address=ShippingAddress(**created_order["shippingAddress"]),
-            created_at=created_order["createdAt"],
-            updated_at=created_order["updatedAt"]
+            shipping_address=ShippingAddress(**created_order["shipping_address"]),
+            created_at=created_order["created_at"],
+            updated_at=created_order["updated_at"]
         )
         
     except HTTPException:
@@ -376,13 +377,13 @@ async def get_user_orders(current_user: User = Depends(get_current_user), db: Da
         return [
             Order(
                 id=order["id"],
-                user_id=order["userId"],
+                user_id=order["user_id"],
                 items=order["items"],  # Direct list of item dictionaries
-                total_amount=order["totalAmount"],
+                total_amount=order["total_amount"],
                 status=order["status"],
-                shipping_address=ShippingAddress(**order["shippingAddress"]),
-                created_at=order["createdAt"],
-                updated_at=order["updatedAt"]
+                shipping_address=ShippingAddress(**order["shipping_address"]),
+                created_at=order["created_at"],
+                updated_at=order["updated_at"]
             ) for order in orders
         ]
         
@@ -405,7 +406,7 @@ async def get_order(order_id: int, current_user: User = Depends(get_current_user
             )
         
         # Check if the order belongs to the current user
-        if order["userId"] != current_user.id:
+        if order["user_id"] != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. You can only view your own orders."
@@ -413,13 +414,13 @@ async def get_order(order_id: int, current_user: User = Depends(get_current_user
         
         return Order(
             id=order["id"],
-            user_id=order["userId"],
+            user_id=order["user_id"],
             items=order["items"],  # Direct list of item dictionaries
-            total_amount=order["totalAmount"],
+            total_amount=order["total_amount"],
             status=order["status"],
-            shipping_address=ShippingAddress(**order["shippingAddress"]),
-            created_at=order["createdAt"],
-            updated_at=order["updatedAt"]
+            shipping_address=ShippingAddress(**order["shipping_address"]),
+            created_at=order["created_at"],
+            updated_at=order["updated_at"]
         )
         
     except HTTPException:
@@ -443,7 +444,7 @@ async def update_order_status(order_id: int, status_data: OrderStatusUpdate, cur
                 detail="Order not found"
             )
         
-        if order["userId"] != current_user.id:
+        if order["user_id"] != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. You can only update your own orders."
@@ -487,7 +488,7 @@ async def cancel_order(order_id: int, current_user: User = Depends(get_current_u
                 detail="Order not found"
             )
         
-        if order["userId"] != current_user.id:
+        if order["user_id"] != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. You can only cancel your own orders."

@@ -13,7 +13,7 @@ class TestProductEndpoints:
     """Test cases for product API endpoints."""
     
     def test_get_products_returns_list(self, client, test_db):
-        """Test that GET /products returns a list of products."""
+        """Test that GET /products returns paginated products with metadata."""
         # Add some test products
         test_products = [
             Product(name="Test Product 1", description="Test Description 1", 
@@ -29,9 +29,15 @@ class TestProductEndpoints:
         response = client.get("/products")
         assert response.status_code == 200
         data = response.json()
-        # Should return a list when no pagination parameters are used
-        assert isinstance(data, list)
-        assert len(data) == 2
+        # Should return paginated response with metadata
+        assert isinstance(data, dict)
+        assert "items" in data
+        assert "page" in data
+        assert "limit" in data
+        assert "total" in data
+        assert isinstance(data["items"], list)
+        assert len(data["items"]) == 2
+        assert data["total"] == 2
     
     def test_get_products_with_pagination(self, client, test_db):
         """Test that GET /products supports pagination."""

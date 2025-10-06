@@ -2,7 +2,7 @@
  * Cart context for managing shopping cart state
  */
 import React, { createContext, useContext, useReducer, ReactNode } from 'react'
-import { CartItem } from '../services/api'
+import type { CartItem } from '../types'
 
 interface CartState {
   items: CartItem[]
