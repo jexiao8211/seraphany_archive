@@ -154,20 +154,152 @@ class TestProductEndpoints:
         # Test creating product with authentication
         response = client.post("/products", json=product_data, 
                               headers=auth_helper.get_auth_headers("admin@example.com"))
-        # Note: This will return 501 Not Implemented since the endpoint is not implemented yet
-        # But it should not return 401/403 anymore
-        assert response.status_code in [200, 201, 501]  # 501 = Not Implemented
+        
+        assert response.status_code == 201
+        data = response.json()
+        assert "id" in data
+        assert data["name"] == "Vintage Chanel Dress"
+        assert data["description"] == "Beautiful vintage Chanel dress"
+        assert data["price"] == 1500.00
+        assert data["category"] == "dresses"
+        assert len(data["images"]) == 2
+        assert data["is_available"] == True
     
     def test_update_product_requires_authentication(self, client):
         """Test that PUT /products/{id} requires authentication."""
         product_data = {
             "name": "Updated Vintage Chanel Dress",
-            "price": 1600.00
+            "description": "Updated description",
+            "price": 1600.00,
+            "category": "dresses",
+            "images": []
         }
         response = client.put("/products/1", json=product_data)
         assert response.status_code == 401  # Changed from 403 to 401 for JWT
+    
+    def test_update_product_with_valid_data(self, client, auth_helper, test_db):
+        """Test updating a product with valid data and authentication."""
+        # Create authenticated user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="admin2@example.com",
+            password="adminpass123"
+        )
+        
+        # Create a test product first
+        test_product = Product(
+            name="Original Product",
+            description="Original Description",
+            price=100.00,
+            category="test",
+            is_available=True
+        )
+        test_db.add(test_product)
+        test_db.commit()
+        test_db.refresh(test_product)
+        
+        # Update the product
+        update_data = {
+            "name": "Updated Product Name",
+            "description": "Updated Description",
+            "price": 150.00,
+            "category": "updated_category",
+            "images": ["image1.jpg", "image2.jpg"]
+        }
+        
+        response = client.put(
+            f"/products/{test_product.id}",
+            json=update_data,
+            headers=auth_helper.get_auth_headers("admin2@example.com")
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Updated Product Name"
+        assert data["description"] == "Updated Description"
+        assert data["price"] == 150.00
+        assert data["category"] == "updated_category"
+        assert len(data["images"]) == 2
+        assert data["is_available"] == True
+    
+    def test_update_nonexistent_product_returns_404(self, client, auth_helper):
+        """Test that updating a non-existent product returns 404."""
+        # Create authenticated user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="admin3@example.com",
+            password="adminpass123"
+        )
+        
+        update_data = {
+            "name": "Updated Product",
+            "description": "Updated Description",
+            "price": 150.00,
+            "category": "test",
+            "images": []
+        }
+        
+        response = client.put(
+            "/products/99999",
+            json=update_data,
+            headers=auth_helper.get_auth_headers("admin3@example.com")
+        )
+        
+        assert response.status_code == 404
+        assert "detail" in response.json()
     
     def test_delete_product_requires_authentication(self, client):
         """Test that DELETE /products/{id} requires authentication."""
         response = client.delete("/products/1")
         assert response.status_code == 401  # Changed from 403 to 401 for JWT
+    
+    def test_delete_product_with_valid_auth(self, client, auth_helper, test_db):
+        """Test deleting a product with valid authentication (soft delete)."""
+        # Create authenticated user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="admin4@example.com",
+            password="adminpass123"
+        )
+        
+        # Create a test product first
+        test_product = Product(
+            name="Product To Delete",
+            description="This will be deleted",
+            price=100.00,
+            category="test",
+            is_available=True
+        )
+        test_db.add(test_product)
+        test_db.commit()
+        test_db.refresh(test_product)
+        
+        # Delete the product
+        response = client.delete(
+            f"/products/{test_product.id}",
+            headers=auth_helper.get_auth_headers("admin4@example.com")
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == test_product.id
+        assert data["is_available"] == False  # Should be soft-deleted
+        
+        # Verify the product still exists but is unavailable
+        get_response = client.get(f"/products/{test_product.id}")
+        assert get_response.status_code == 200
+        product_data = get_response.json()
+        assert product_data["is_available"] == False
+    
+    def test_delete_nonexistent_product_returns_404(self, client, auth_helper):
+        """Test that deleting a non-existent product returns 404."""
+        # Create authenticated user
+        user_data, token = auth_helper.create_authenticated_user(
+            email="admin5@example.com",
+            password="adminpass123"
+        )
+        
+        response = client.delete(
+            "/products/99999",
+            headers=auth_helper.get_auth_headers("admin5@example.com")
+        )
+        
+        assert response.status_code == 404
+        assert "detail" in response.json()

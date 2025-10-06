@@ -197,23 +197,124 @@ async def get_product(product_id: int, db: DatabaseService = Depends(get_databas
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
-@app.post("/products")
-async def create_product(product: ProductCreate, current_user: User = Depends(get_current_user)):
+@app.post("/products", response_model=Product, status_code=status.HTTP_201_CREATED)
+async def create_product(
+    product: ProductCreate, 
+    current_user: User = Depends(get_current_user), 
+    db: DatabaseService = Depends(get_database_service)
+):
     """Create a new product (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+    try:
+        # Convert Pydantic model to dict for database
+        product_data = {
+            "name": product.name,
+            "description": product.description,
+            "price": product.price,
+            "category": product.category,
+            "images": product.images,
+            "is_available": True  # New products are available by default
+        }
+        
+        # Create product in database
+        created_product = db.create_product(product_data)
+        
+        # Return the created product
+        return Product(
+            id=created_product["id"],
+            name=created_product["name"],
+            description=created_product["description"],
+            price=created_product["price"],
+            category=created_product["category"],
+            images=created_product["images"],
+            is_available=created_product["is_available"]
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create product: {str(e)}"
+        )
 
-@app.put("/products/{product_id}")
-async def update_product(product_id: int, product: ProductCreate, current_user: User = Depends(get_current_user)):
+@app.put("/products/{product_id}", response_model=Product)
+async def update_product(
+    product_id: int, 
+    product: ProductCreate, 
+    current_user: User = Depends(get_current_user),
+    db: DatabaseService = Depends(get_database_service)
+):
     """Update a product (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+    try:
+        # Convert Pydantic model to dict for database
+        product_data = {
+            "name": product.name,
+            "description": product.description,
+            "price": product.price,
+            "category": product.category,
+            "images": product.images
+        }
+        
+        # Update product in database
+        updated_product = db.update_product(product_id, product_data)
+        
+        # Return the updated product
+        return Product(
+            id=updated_product["id"],
+            name=updated_product["name"],
+            description=updated_product["description"],
+            price=updated_product["price"],
+            category=updated_product["category"],
+            images=updated_product["images"],
+            is_available=updated_product["is_available"]
+        )
+        
+    except ValueError as e:
+        # Database raises ValueError when product not found
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update product: {str(e)}"
+        )
 
-@app.delete("/products/{product_id}")
-async def delete_product(product_id: int, current_user: User = Depends(get_current_user)):
-    """Delete a product (requires authentication)."""
-    # This will be implemented when we add authentication
-    pass
+@app.delete("/products/{product_id}", response_model=Product)
+async def delete_product(
+    product_id: int, 
+    current_user: User = Depends(get_current_user),
+    db: DatabaseService = Depends(get_database_service)
+):
+    """
+    Delete a product (soft delete - sets is_available to False).
+    Requires authentication.
+    """
+    try:
+        # Soft delete the product (sets is_available = False)
+        deleted_product = db.delete_product(product_id)
+        
+        # Return the deleted product with is_available = False
+        return Product(
+            id=deleted_product["id"],
+            name=deleted_product["name"],
+            description=deleted_product["description"],
+            price=deleted_product["price"],
+            category=deleted_product["category"],
+            images=deleted_product["images"],
+            is_available=deleted_product["is_available"]
+        )
+        
+    except ValueError as e:
+        # Database raises ValueError when product not found
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete product: {str(e)}"
+        )
 
 # Authentication endpoints
 @app.post("/auth/register", response_model=User, status_code=status.HTTP_201_CREATED)
