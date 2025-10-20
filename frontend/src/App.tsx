@@ -14,6 +14,14 @@ import ProductsPage from './pages/ProductsPage'
 import CartPage from './pages/CartPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import AdminProductsPage from './pages/AdminProductsPage'
+import AdminProductCreatePage from './pages/AdminProductCreatePage'
+import AdminProductEditPage from './pages/AdminProductEditPage'
+import CheckoutPage from './pages/CheckoutPage'
+import OrderConfirmationPage from './pages/OrderConfirmationPage'
+import OrdersPage from './pages/OrdersPage'
+import OrderDetailsPage from './pages/OrderDetailsPage'
+import AdminRoute from './components/AdminRoute'
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -50,12 +58,46 @@ const AppContent: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
-          {/* Example of a protected route (uncomment when you add order pages) */}
-          {/* <Route path="/orders" element={
+          {/* Admin Routes */}
+          <Route path="/admin/products" element={
+            <AdminRoute>
+              <AdminProductsPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products/new" element={
+            <AdminRoute>
+              <AdminProductCreatePage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products/:id/edit" element={
+            <AdminRoute>
+              <AdminProductEditPage />
+            </AdminRoute>
+          } />
+          
+          {/* Checkout Routes */}
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/order-confirmation/:orderId" element={
+            <ProtectedRoute>
+              <OrderConfirmationPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Order History Routes */}
+          <Route path="/orders" element={
             <ProtectedRoute>
               <OrdersPage />
             </ProtectedRoute>
-          } /> */}
+          } />
+          <Route path="/orders/:id" element={
+            <ProtectedRoute>
+              <OrderDetailsPage />
+            </ProtectedRoute>
+          } />
         </Routes>
       </main>
     </div>

@@ -3,13 +3,16 @@ Authentication helper functions for tests
 """
 from fastapi.testclient import TestClient
 from typing import Dict, Any, Optional
+from sqlalchemy.orm import Session
+from app.models import User
 
 
 class AuthTestHelper:
     """Helper class for authentication in tests"""
     
-    def __init__(self, client: TestClient):
+    def __init__(self, client: TestClient, test_db: Optional[Session] = None):
         self.client = client
+        self.test_db = test_db
         self._auth_tokens: Dict[str, str] = {}
     
     def register_user(self, email: str = "test@example.com", password: str = "testpass123", 
@@ -53,6 +56,24 @@ class AuthTestHelper:
                                  last_name: str = "User") -> tuple[Dict[str, Any], str]:
         """Create a user, login, and return (user_data, token)"""
         user_data = self.register_user(email, password, first_name, last_name)
+        token = self.login_user(email, password)
+        return user_data, token
+    
+    def create_admin_user(self, email: str = "admin@example.com", 
+                         password: str = "adminpass123",
+                         first_name: str = "Admin", 
+                         last_name: str = "User") -> tuple[Dict[str, Any], str]:
+        """Create an admin user, login, and return (user_data, token)"""
+        user_data = self.register_user(email, password, first_name, last_name)
+        
+        # Set is_admin to True in the database
+        if self.test_db:
+            user = self.test_db.query(User).filter(User.email == email).first()
+            if user:
+                user.is_admin = True
+                self.test_db.commit()
+        
+        # Login AFTER setting admin status to get fresh token
         token = self.login_user(email, password)
         return user_data, token
     

@@ -16,8 +16,7 @@ const CartPage: React.FC = () => {
       navigate('/login')
       return
     }
-    // TODO: Implement checkout flow
-    alert('Checkout functionality coming soon!')
+    navigate('/checkout')
   }
 
   if (items.length === 0) {

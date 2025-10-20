@@ -224,6 +224,7 @@ class DatabaseService:
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "password": user.password,
+                "is_admin": user.is_admin,
                 "created_at": user.created_at.isoformat(),
                 "updated_at": user.updated_at.isoformat()
             }
@@ -243,6 +244,7 @@ class DatabaseService:
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "is_admin": user.is_admin,
                 "created_at": user.created_at.isoformat(),
                 "updated_at": user.updated_at.isoformat()
             }

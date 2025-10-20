@@ -56,6 +56,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
+    is_admin: bool = False
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -137,7 +138,8 @@ async def get_current_user(
             id=user["id"],
             email=user["email"],
             first_name=user["first_name"],
-            last_name=user["last_name"]
+            last_name=user["last_name"],
+            is_admin=user.get("is_admin", False)
         )
     except HTTPException:
         raise
@@ -170,10 +172,21 @@ async def get_current_user_optional(
             id=user["id"],
             email=user["email"],
             first_name=user["first_name"],
-            last_name=user["last_name"]
+            last_name=user["last_name"],
+            is_admin=user.get("is_admin", False)
         )
     except Exception:
         return None
+
+# Admin authentication dependency
+async def get_admin_user(current_user: User = Depends(get_current_user)):
+    """Get current admin user (requires authentication and admin role)."""
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
 
 # Product endpoints
 @app.get("/products")
@@ -200,7 +213,7 @@ async def get_product(product_id: int, db: DatabaseService = Depends(get_databas
 @app.post("/products", response_model=Product, status_code=status.HTTP_201_CREATED)
 async def create_product(
     product: ProductCreate, 
-    current_user: User = Depends(get_current_user), 
+    current_user: User = Depends(get_admin_user), 
     db: DatabaseService = Depends(get_database_service)
 ):
     """Create a new product (requires authentication)."""
@@ -239,7 +252,7 @@ async def create_product(
 async def update_product(
     product_id: int, 
     product: ProductCreate, 
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_admin_user),
     db: DatabaseService = Depends(get_database_service)
 ):
     """Update a product (requires authentication)."""
@@ -282,7 +295,7 @@ async def update_product(
 @app.delete("/products/{product_id}", response_model=Product)
 async def delete_product(
     product_id: int, 
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_admin_user),
     db: DatabaseService = Depends(get_database_service)
 ):
     """
@@ -343,7 +356,8 @@ async def register_user(user: UserCreate, db: DatabaseService = Depends(get_data
         id=new_user["id"],
         email=new_user["email"],
         first_name=new_user["first_name"],
-        last_name=new_user["last_name"]
+        last_name=new_user["last_name"],
+        is_admin=new_user.get("is_admin", False)
     )
 
 @app.post("/auth/login", response_model=Token)

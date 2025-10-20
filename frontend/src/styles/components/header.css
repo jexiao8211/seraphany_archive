@@ -51,6 +51,15 @@
   color: var(--color-gray-900);
 }
 
+.header-nav-link.admin-link {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.header-nav-link.admin-link:hover {
+  color: var(--color-primary-dark);
+}
+
 @media (min-width: 768px) {
   .header-nav {
     display: flex;

@@ -35,6 +35,16 @@ const Header: React.FC = () => {
             <Link to="/cart" className="header-nav-link">
               Cart ({getItemCount()})
             </Link>
+            {user && (
+              <Link to="/orders" className="header-nav-link">
+                Orders
+              </Link>
+            )}
+            {user?.is_admin && (
+              <Link to="/admin/products" className="header-nav-link admin-link">
+                Admin
+              </Link>
+            )}
           </nav>
 
           {/* Search Bar */}

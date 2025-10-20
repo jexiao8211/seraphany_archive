@@ -7,6 +7,7 @@ export interface User {
   email: string
   first_name: string
   last_name: string
+  is_admin: boolean
 }
 
 export interface Product {
@@ -31,15 +32,18 @@ export interface Order {
   id: number
   user_id: number
   items: OrderItem[]
-  total: number
+  total_amount: number
   status: string
+  shipping_address: ShippingAddress
   created_at: string
+  updated_at: string
 }
 
 export interface OrderItem {
   product_id: number
   quantity: number
   price: number
+  product_name: string
 }
 
 export interface ShippingAddress {

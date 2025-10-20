@@ -137,8 +137,8 @@ class TestProductEndpoints:
     
     def test_create_product_with_valid_data(self, client, auth_helper):
         """Test creating a product with valid data (when authenticated)."""
-        # Create authenticated user
-        user_data, token = auth_helper.create_authenticated_user(
+        # Create admin user
+        user_data, token = auth_helper.create_admin_user(
             email="admin@example.com",
             password="adminpass123"
         )
@@ -179,8 +179,8 @@ class TestProductEndpoints:
     
     def test_update_product_with_valid_data(self, client, auth_helper, test_db):
         """Test updating a product with valid data and authentication."""
-        # Create authenticated user
-        user_data, token = auth_helper.create_authenticated_user(
+        # Create admin user
+        user_data, token = auth_helper.create_admin_user(
             email="admin2@example.com",
             password="adminpass123"
         )
@@ -223,8 +223,8 @@ class TestProductEndpoints:
     
     def test_update_nonexistent_product_returns_404(self, client, auth_helper):
         """Test that updating a non-existent product returns 404."""
-        # Create authenticated user
-        user_data, token = auth_helper.create_authenticated_user(
+        # Create admin user
+        user_data, token = auth_helper.create_admin_user(
             email="admin3@example.com",
             password="adminpass123"
         )
@@ -253,8 +253,8 @@ class TestProductEndpoints:
     
     def test_delete_product_with_valid_auth(self, client, auth_helper, test_db):
         """Test deleting a product with valid authentication (soft delete)."""
-        # Create authenticated user
-        user_data, token = auth_helper.create_authenticated_user(
+        # Create admin user
+        user_data, token = auth_helper.create_admin_user(
             email="admin4@example.com",
             password="adminpass123"
         )
@@ -290,8 +290,8 @@ class TestProductEndpoints:
     
     def test_delete_nonexistent_product_returns_404(self, client, auth_helper):
         """Test that deleting a non-existent product returns 404."""
-        # Create authenticated user
-        user_data, token = auth_helper.create_authenticated_user(
+        # Create admin user
+        user_data, token = auth_helper.create_admin_user(
             email="admin5@example.com",
             password="adminpass123"
         )

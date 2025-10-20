@@ -65,6 +65,34 @@ export const getProduct = async (id: number): Promise<Product> => {
   return response.data
 }
 
+// Admin product API functions
+export const createProduct = async (productData: {
+  name: string
+  description: string
+  price: number
+  category: string
+  images: string[]
+}): Promise<Product> => {
+  const response = await api.post('/products', productData)
+  return response.data
+}
+
+export const updateProduct = async (id: number, productData: {
+  name: string
+  description: string
+  price: number
+  category: string
+  images: string[]
+}): Promise<Product> => {
+  const response = await api.put(`/products/${id}`, productData)
+  return response.data
+}
+
+export const deleteProduct = async (id: number): Promise<Product> => {
+  const response = await api.delete(`/products/${id}`)
+  return response.data
+}
+
 // Auth API functions
 export const login = async (credentials: LoginCredentials): Promise<AuthToken> => {
   const response = await api.post('/auth/login', credentials)
@@ -96,6 +124,21 @@ export const createOrder = async (orderData: {
   shipping_address: ShippingAddress
 }) => {
   const response = await api.post('/orders', orderData)
+  return response.data
+}
+
+export const getUserOrders = async (): Promise<Order[]> => {
+  const response = await api.get('/orders')
+  return response.data
+}
+
+export const getOrder = async (id: number): Promise<Order> => {
+  const response = await api.get(`/orders/${id}`)
+  return response.data
+}
+
+export const cancelOrder = async (id: number) => {
+  const response = await api.post(`/orders/${id}/cancel`)
   return response.data
 }
 

@@ -21,3 +21,6 @@
 @import './styles/pages/products.css';
 @import './styles/pages/cart.css';
 @import './styles/pages/auth.css';
+@import './styles/pages/admin.css';
+@import './styles/pages/checkout.css';
+@import './styles/pages/orders.css';
