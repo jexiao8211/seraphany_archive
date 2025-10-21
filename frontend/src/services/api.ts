@@ -142,4 +142,19 @@ export const cancelOrder = async (id: number) => {
   return response.data
 }
 
+// Image upload functions
+export const uploadProductImages = async (files: File[]): Promise<{uploaded_paths: string[], errors: string[], message: string}> => {
+  const formData = new FormData()
+  files.forEach(file => {
+    formData.append('files', file)
+  })
+  
+  const response = await api.post('/upload/product-images', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+  return response.data
+}
+
 export default api

@@ -2,14 +2,16 @@
 Main FastAPI application for vintage store backend.
 Following TDD approach - implementing endpoints to make tests pass.
 """
-from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi import FastAPI, HTTPException, Depends, status, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Dict, Any
 import os
 from .database import DatabaseService
 from .auth import AuthService
+from .storage import storage_service
 
 # Initialize FastAPI app
 app = FastAPI(title="Vintage Store API", version="1.0.0")
@@ -22,6 +24,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve uploaded files
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Security scheme for JWT tokens
 security = HTTPBearer(auto_error=False)
@@ -328,6 +333,60 @@ async def delete_product(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete product: {str(e)}"
         )
+
+# Image upload endpoints
+@app.post("/upload/product-images", status_code=status.HTTP_201_CREATED)
+async def upload_product_images(
+    files: List[UploadFile] = File(...),
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Upload product images (admin-only).
+    Accepts multiple image files with validation.
+    """
+    if not files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No files provided"
+        )
+    
+    uploaded_paths = []
+    errors = []
+    
+    for file in files:
+        try:
+            # Read file content
+            content = await file.read()
+            
+            # Validate file
+            is_valid, error_msg = storage_service.validate_image_file(
+                file.filename, 
+                len(content)
+            )
+            
+            if not is_valid:
+                errors.append(f"{file.filename}: {error_msg}")
+                continue
+            
+            # Save file
+            url_path = storage_service.save_image(content, file.filename, "products")
+            uploaded_paths.append(url_path)
+            
+        except Exception as e:
+            errors.append(f"{file.filename}: Upload failed - {str(e)}")
+    
+    if errors and not uploaded_paths:
+        # All uploads failed
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"All uploads failed: {'; '.join(errors)}"
+        )
+    
+    return {
+        "uploaded_paths": uploaded_paths,
+        "errors": errors,
+        "message": f"Successfully uploaded {len(uploaded_paths)} file(s)"
+    }
 
 # Authentication endpoints
 @app.post("/auth/register", response_model=User, status_code=status.HTTP_201_CREATED)

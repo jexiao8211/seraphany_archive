@@ -296,6 +296,29 @@
 4. ✅ **Role-based access** - Admin vs regular user permissions
 5. ✅ **All core functionality** - MVP is ready for use
 
+## 🖼️ **Image Upload System** ✅ **COMPLETE**
+
+### Backend Implementation
+- ✅ **Storage Service**: Local file storage with cloud migration architecture
+- ✅ **Upload Endpoint**: `POST /upload/product-images` with admin authentication
+- ✅ **File Validation**: Type (jpg, png, webp) and size (5MB max) validation
+- ✅ **Static File Serving**: Images served via FastAPI StaticFiles at `/uploads/*`
+- ✅ **Migration Documentation**: Complete guide for cloud storage migration
+
+### Frontend Implementation
+- ✅ **ImageUpload Component**: Drag-and-drop interface with preview
+- ✅ **Admin Forms Integration**: Both create and edit pages updated
+- ✅ **Auto-refresh Fix**: Product list refreshes after edit operations
+- ✅ **File Management**: Upload, preview, and remove images
+- ✅ **Validation Feedback**: Client-side file type and size validation
+
+### Features
+- **Multi-file Upload**: Drag-and-drop multiple images at once
+- **Image Previews**: Thumbnail previews with remove buttons
+- **Progress Indicators**: Upload status and error handling
+- **Existing Image Management**: Edit existing product images
+- **Cloud-Ready**: Architecture supports easy migration to S3/R2/etc.
+
 ### Technical Debt
 - [ ] Remove unused `Request` parameter from GET /products endpoint
 - [ ] Add proper error handling and logging
@@ -304,8 +327,8 @@
 - [ ] Add request validation middleware
 
 ### Key Design Decisions
-- **Admin Access**: For MVP, any authenticated user can manage products (add role system later)
-- **Images**: Start with URL input for product images (proper upload in Phase 3)
+- **Admin Access**: Role-based system implemented with `is_admin` flag
+- **Images**: Local file upload system with drag-and-drop UI (cloud migration ready)
 - **Orders without Auth**: Keep orders authenticated (better for tracking and user experience)
 - **Payment**: Build checkout flow first, add Stripe second (can test orders without payment)
 

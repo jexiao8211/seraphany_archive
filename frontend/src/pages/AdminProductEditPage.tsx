@@ -3,19 +3,21 @@
  */
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProduct, updateProduct } from '../services/api'
+import ImageUpload from '../components/ImageUpload'
 
 interface ProductFormData {
   name: string
   description: string
   price: string
   category: string
-  images: string
+  images: string[]
 }
 
 const AdminProductEditPage: React.FC = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { id } = useParams<{ id: string }>()
   const productId = parseInt(id || '0', 10)
 
@@ -24,7 +26,7 @@ const AdminProductEditPage: React.FC = () => {
     description: '',
     price: '',
     category: '',
-    images: ''
+    images: []
   })
   const [errors, setErrors] = useState<Partial<ProductFormData>>({})
 
@@ -38,6 +40,8 @@ const AdminProductEditPage: React.FC = () => {
   const updateProductMutation = useMutation({
     mutationFn: (data: Parameters<typeof updateProduct>[1]) => updateProduct(productId, data),
     onSuccess: () => {
+      // Invalidate admin products cache to trigger refresh
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] })
       navigate('/admin/products')
     },
     onError: (error) => {
@@ -54,7 +58,7 @@ const AdminProductEditPage: React.FC = () => {
         description: product.description,
         price: product.price.toString(),
         category: product.category,
-        images: product.images.join(', ')
+        images: product.images
       })
     }
   }, [product])
@@ -104,18 +108,12 @@ const AdminProductEditPage: React.FC = () => {
       return
     }
 
-    // Parse images (comma-separated URLs)
-    const imageUrls = formData.images
-      .split(',')
-      .map(url => url.trim())
-      .filter(url => url.length > 0)
-
     const productData = {
       name: formData.name.trim(),
       description: formData.description.trim(),
       price: parseFloat(formData.price),
       category: formData.category.trim(),
-      images: imageUrls
+      images: formData.images
     }
 
     updateProductMutation.mutate(productData)
@@ -236,21 +234,11 @@ const AdminProductEditPage: React.FC = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="images" className="form-label">
-            Image URLs
-          </label>
-          <input
-            type="text"
-            id="images"
-            name="images"
-            value={formData.images}
-            onChange={handleInputChange}
-            className="form-input"
-            placeholder="Enter image URLs separated by commas"
+          <ImageUpload
+            onImagesChange={(imagePaths) => setFormData(prev => ({ ...prev, images: imagePaths }))}
+            existingImages={formData.images}
+            maxFiles={10}
           />
-          <p className="form-help">
-            Enter image URLs separated by commas (e.g., "image1.jpg, image2.jpg")
-          </p>
         </div>
 
         <div className="form-actions">

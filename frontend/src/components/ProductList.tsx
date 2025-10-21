@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../services/api'
 import { useCart } from '../contexts/CartContext'
 
+const API_BASE_URL = 'http://localhost:8000'
+
 const ProductList: React.FC = () => {
   const [category, setCategory] = useState('')
   const [search, setSearch] = useState('')
@@ -21,7 +23,7 @@ const ProductList: React.FC = () => {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.images[0] || '',
+      image: product.images[0] ? `${API_BASE_URL}${product.images[0]}` : '',
     })
     // Show success message (this would be improved with a toast notification)
     alert('Added to cart!')
@@ -74,7 +76,7 @@ const ProductList: React.FC = () => {
           <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="aspect-w-1 aspect-h-1">
               <img
-                src={product.images[0] || '/placeholder.jpg'}
+                src={product.images[0] ? `${API_BASE_URL}${product.images[0]}` : '/placeholder.jpg'}
                 alt={product.name}
                 className="w-full h-48 object-cover"
               />

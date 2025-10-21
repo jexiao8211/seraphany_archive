@@ -15,6 +15,7 @@
 /* 4. Component styles */
 @import './styles/components/header.css';
 @import './styles/components/loading.css';
+@import './styles/components/image-upload.css';
 
 /* 5. Page styles */
 @import './styles/pages/home.css';

@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query'
 import { getProducts, deleteProduct } from '../services/api'
 import type { Product } from '../types'
 
+const API_BASE_URL = 'http://localhost:8000'
+
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
@@ -130,7 +132,7 @@ const AdminProductsPage: React.FC = () => {
                 <tr key={product.id}>
                   <td>
                     <img
-                      src={product.images[0] || 'https://via.placeholder.com/50'}
+                      src={product.images[0] ? `${API_BASE_URL}${product.images[0]}` : 'https://via.placeholder.com/50'}
                       alt={product.name}
                       className="product-thumbnail"
                     />
