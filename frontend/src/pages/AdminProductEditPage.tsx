@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProduct, updateProduct } from '../services/api'
+import { useToast } from '../contexts/ToastContext'
 import ImageUpload from '../components/ImageUpload'
 
 interface ProductFormData {
@@ -18,6 +19,7 @@ interface ProductFormData {
 const AdminProductEditPage: React.FC = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { showSuccess, showError } = useToast()
   const { id } = useParams<{ id: string }>()
   const productId = parseInt(id || '0', 10)
 
@@ -42,11 +44,12 @@ const AdminProductEditPage: React.FC = () => {
     onSuccess: () => {
       // Invalidate admin products cache to trigger refresh
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
+      showSuccess('Product updated successfully')
       navigate('/admin/products')
     },
     onError: (error) => {
       console.error('Failed to update product:', error)
-      alert('Failed to update product. Please try again.')
+      showError('Failed to update product. Please try again.')
     }
   })
 

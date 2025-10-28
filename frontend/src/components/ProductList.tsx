@@ -2,63 +2,67 @@
  * ProductList component for displaying and filtering products
  */
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../services/api'
 import { useCart } from '../contexts/CartContext'
-
-const API_BASE_URL = 'http://localhost:8000'
+import { useToast } from '../contexts/ToastContext'
+import { useFirstImageUrl } from '../hooks/useImageUrl'
+import type { Product } from '../types'
 
 const ProductList: React.FC = () => {
   const [category, setCategory] = useState('')
   const [search, setSearch] = useState('')
   const { addItem } = useCart()
+  const { showSuccess } = useToast()
 
   const { data: products, isLoading, error } = useQuery({
     queryKey: ['products', category, search],
     queryFn: () => getProducts({ category, search }),
   })
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault() // Prevent navigation when clicking Add to Cart
+    e.stopPropagation()
     addItem({
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.images[0] ? `${API_BASE_URL}${product.images[0]}` : '',
+      image: useFirstImageUrl(product.images),
     })
-    // Show success message (this would be improved with a toast notification)
-    alert('Added to cart!')
+    showSuccess('Added to cart!')
   }
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading...</div>
+    return <div className="loading-state">Loading...</div>
   }
 
   if (error) {
-    return <div className="text-center py-8 text-red-600">Error loading products</div>
+    return <div className="error-state">Error loading products</div>
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="product-list-container">
       {/* Filters */}
-      <div className="mb-8 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
+      <div className="product-filters">
+        <div className="filter-search">
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="filter-input"
           />
         </div>
-        <div className="sm:w-48">
-          <label htmlFor="category-filter" className="sr-only">
+        <div className="filter-category">
+          <label htmlFor="category-filter" className="filter-label">
             Category
           </label>
           <select
             id="category-filter"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="filter-select"
             aria-label="Category"
           >
             <option value="">All Categories</option>
@@ -71,41 +75,45 @@ const ProductList: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="products-grid">
         {products?.map((product) => (
-          <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="aspect-w-1 aspect-h-1">
+          <Link
+            key={product.id}
+            to={`/products/${product.id}`}
+            className="product-card"
+          >
+            <div className="product-image-container">
               <img
-                src={product.images[0] ? `${API_BASE_URL}${product.images[0]}` : '/placeholder.jpg'}
+                src={useFirstImageUrl(product.images) || '/placeholder.jpg'}
                 alt={product.name}
-                className="w-full h-48 object-cover"
+                className="product-image"
               />
             </div>
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="product-info">
+              <h3 className="product-name">
                 {product.name}
               </h3>
-              <p className="text-gray-600 text-sm mb-2">
+              <p className="product-description">
                 {product.description}
               </p>
-              <div className="flex justify-between items-center">
-                <span className="text-xl font-bold text-gray-900">
+              <div className="product-footer">
+                <span className="product-price">
                   ${product.price.toFixed(2)}
                 </span>
                 <button
-                  onClick={() => handleAddToCart(product)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={(e) => handleAddToCart(e, product)}
+                  className="add-to-cart-btn"
                 >
                   Add to Cart
                 </button>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
       {products?.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="no-products">
           No products found matching your criteria.
         </div>
       )}

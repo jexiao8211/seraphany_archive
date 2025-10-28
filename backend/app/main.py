@@ -2,7 +2,7 @@
 Main FastAPI application for vintage store backend.
 Following TDD approach - implementing endpoints to make tests pass.
 """
-from fastapi import FastAPI, HTTPException, Depends, status, Request, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
@@ -12,21 +12,22 @@ import os
 from .database import DatabaseService
 from .auth import AuthService
 from .storage import storage_service
+from .config import settings
 
 # Initialize FastAPI app
-app = FastAPI(title="Vintage Store API", version="1.0.0")
+app = FastAPI(title=settings.app_name, version=settings.app_version)
 
 # Configure CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Vite dev server
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Serve uploaded files
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
 
 # Security scheme for JWT tokens
 security = HTTPBearer(auto_error=False)

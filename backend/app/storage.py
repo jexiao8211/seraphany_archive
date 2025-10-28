@@ -8,13 +8,14 @@ from datetime import datetime
 from typing import List, Optional
 from pathlib import Path
 import shutil
+from .config import get_upload_dir, get_max_file_size, get_allowed_file_types
 
 
 class StorageService:
     """Storage service for handling file operations"""
     
-    def __init__(self, base_path: str = "uploads"):
-        self.base_path = Path(base_path)
+    def __init__(self, base_path: Optional[str] = None):
+        self.base_path = Path(base_path or get_upload_dir())
         self.products_path = self.base_path / "products"
         
         # Ensure directories exist
@@ -90,28 +91,28 @@ class StorageService:
             pass
         return None
     
-    def validate_image_file(self, filename: str, file_size: int, max_size_mb: int = 5) -> tuple[bool, str]:
+    def validate_image_file(self, filename: str, file_size: int) -> tuple[bool, str]:
         """
         Validate image file before saving.
         
         Args:
             filename: Original filename
             file_size: File size in bytes
-            max_size_mb: Maximum size in MB
             
         Returns:
             (is_valid, error_message)
         """
         # Check file extension
-        allowed_extensions = {'.jpg', '.jpeg', '.png', '.webp'}
+        allowed_extensions = get_allowed_file_types()
         file_ext = Path(filename).suffix.lower()
         
         if file_ext not in allowed_extensions:
             return False, f"File type not allowed. Allowed types: {', '.join(allowed_extensions)}"
         
         # Check file size
-        max_size_bytes = max_size_mb * 1024 * 1024
+        max_size_bytes = get_max_file_size()
         if file_size > max_size_bytes:
+            max_size_mb = max_size_bytes // (1024 * 1024)
             return False, f"File too large. Maximum size: {max_size_mb}MB"
         
         return True, ""

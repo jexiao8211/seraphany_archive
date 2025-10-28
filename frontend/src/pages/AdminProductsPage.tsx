@@ -5,15 +5,16 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts, deleteProduct } from '../services/api'
+import { useToast } from '../contexts/ToastContext'
 import type { Product } from '../types'
-
-const API_BASE_URL = 'http://localhost:8000'
+import { useFirstImageUrl } from '../hooks/useImageUrl'
 
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null)
+  const { showSuccess, showError } = useToast()
 
   // Fetch products
   const { data: products = [], isLoading, error, refetch } = useQuery({
@@ -30,9 +31,10 @@ const AdminProductsPage: React.FC = () => {
     try {
       await deleteProduct(productId)
       refetch() // Refresh the list
+      showSuccess('Product deleted successfully')
     } catch (error) {
       console.error('Failed to delete product:', error)
-      alert('Failed to delete product. Please try again.')
+      showError('Failed to delete product. Please try again.')
     } finally {
       setDeleteLoading(null)
     }
@@ -132,7 +134,7 @@ const AdminProductsPage: React.FC = () => {
                 <tr key={product.id}>
                   <td>
                     <img
-                      src={product.images[0] ? `${API_BASE_URL}${product.images[0]}` : 'https://via.placeholder.com/50'}
+                      src={useFirstImageUrl(product.images) || 'https://via.placeholder.com/50'}
                       alt={product.name}
                       className="product-thumbnail"
                     />

@@ -3,8 +3,8 @@
  */
 import React, { useState, useRef, useCallback } from 'react'
 import { uploadProductImages } from '../services/api'
-
-const API_BASE_URL = 'http://localhost:8000'
+import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES, MAX_FILES_PER_UPLOAD } from '../config/constants'
+import { useImageUrl } from '../hooks/useImageUrl'
 
 interface ImageUploadProps {
   onImagesChange: (imagePaths: string[]) => void
@@ -23,7 +23,7 @@ interface UploadedFile {
 const ImageUpload: React.FC<ImageUploadProps> = ({
   onImagesChange,
   existingImages = [],
-  maxFiles = 10,
+  maxFiles = MAX_FILES_PER_UPLOAD,
   className = ''
 }) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
@@ -59,16 +59,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
     files.forEach(file => {
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-      if (!allowedTypes.includes(file.type)) {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
         errors.push(`${file.name}: Invalid file type. Only JPG, PNG, and WebP are allowed.`)
         return
       }
 
-      // Validate file size (5MB max)
-      const maxSize = 5 * 1024 * 1024 // 5MB
-      if (file.size > maxSize) {
-        errors.push(`${file.name}: File too large. Maximum size is 5MB.`)
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`${file.name}: File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`)
         return
       }
 
@@ -170,7 +168,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               {existingImages.map((imagePath, index) => (
                 <div key={index} className="image-preview-item">
                   <img 
-                    src={`${API_BASE_URL}${imagePath}`}
+                    src={useImageUrl(imagePath)}
                     alt={`Product ${index + 1}`}
                     className="image-preview"
                   />

@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { createProduct } from '../services/api'
+import { useToast } from '../contexts/ToastContext'
 import ImageUpload from '../components/ImageUpload'
 
 interface ProductFormData {
@@ -17,6 +18,7 @@ interface ProductFormData {
 
 const AdminProductCreatePage: React.FC = () => {
   const navigate = useNavigate()
+  const { showSuccess, showError } = useToast()
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
@@ -29,11 +31,12 @@ const AdminProductCreatePage: React.FC = () => {
   const createProductMutation = useMutation({
     mutationFn: createProduct,
     onSuccess: () => {
+      showSuccess('Product created successfully')
       navigate('/admin/products')
     },
     onError: (error) => {
       console.error('Failed to create product:', error)
-      alert('Failed to create product. Please try again.')
+      showError('Failed to create product. Please try again.')
     }
   })
 

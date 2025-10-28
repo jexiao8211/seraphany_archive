@@ -319,12 +319,44 @@
 - **Existing Image Management**: Edit existing product images
 - **Cloud-Ready**: Architecture supports easy migration to S3/R2/etc.
 
-### Technical Debt
-- [ ] Remove unused `Request` parameter from GET /products endpoint
+## 🧹 **Codebase Cleanup & Refactoring** ✅ **COMPLETE**
+
+### Configuration Management
+- ✅ **Centralized Configuration**: Created `frontend/src/config/constants.ts` and `backend/app/config.py`
+- ✅ **Environment Variables**: Added `.env.example` and proper env var support
+- ✅ **API Base URL**: Eliminated duplication across 4 files, now centralized
+
+### Type Safety & Validation
+- ✅ **TypeScript Improvements**: Fixed all `any` types, added proper interfaces
+- ✅ **Reusable Hooks**: Created `useImageUrl` hook for consistent image URL handling
+- ✅ **Type Definitions**: Enhanced type safety across all components
+
+### Error Handling & User Feedback
+- ✅ **Toast Notifications**: Replaced all `alert()` calls with professional toast system
+- ✅ **User Experience**: Added success/error feedback for all user actions
+- ✅ **Context Provider**: Created `ToastContext` with multiple notification types
+
+### Code Quality & Organization
+- ✅ **Code Formatting**: Added Prettier (frontend) and Black/Ruff (backend) configurations
+- ✅ **Technical Debt**: Removed unused imports, parameters, and temporary files
+- ✅ **File Cleanup**: Deleted `test_image_urls.html`, unused `App.css`
+- ✅ **Consistent Style**: Applied formatting standards across codebase
+
+### Remaining Technical Debt
 - [ ] Add proper error handling and logging
 - [ ] Add API documentation (Swagger/OpenAPI)
 - [ ] Optimize database queries with indexes
 - [ ] Add request validation middleware
+
+### Configuration Issues Fixed
+- ✅ **TOML Configuration**: Fixed duplicate `[tool.black]` sections in pyproject.toml
+- ✅ **Pydantic Import**: Updated to use `pydantic-settings` package for BaseSettings
+- ✅ **Backend Startup**: Fixed module import path and configuration conflicts
+- ✅ **Dependency Management**: Added missing `pydantic-settings` dependency
+- ✅ **Old Config Cleanup**: Removed conflicting old `config.py` file
+- ✅ **Environment Variables**: Fixed compatibility with existing `.env` file
+- ✅ **Database Configuration**: Now properly reads PostgreSQL URL from environment
+- ✅ **Secret Key**: Now properly reads from environment variables
 
 ### Key Design Decisions
 - **Admin Access**: Role-based system implemented with `is_admin` flag

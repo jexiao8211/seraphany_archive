@@ -4,8 +4,7 @@
 import axios from 'axios'
 import type { Product, User, ShippingAddress, LoginCredentials, RegisterData, AuthToken } from '../types'
 import { authStorage } from '../utils/auth'
-
-const API_BASE_URL = 'http://localhost:8000'
+import { API_BASE_URL } from '../config/constants'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
