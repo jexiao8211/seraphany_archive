@@ -3,8 +3,8 @@ Centralized configuration for the backend application
 """
 import os
 import json
-from typing import Optional
-from pydantic import Field, field_validator
+from typing import Optional, Any
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -52,7 +52,28 @@ class Settings(BaseSettings):
         default=["http://localhost:5173", "http://127.0.0.1:5173"],
         description="Allowed CORS origins"
     )
-    CORS_ORIGINS: Optional[str] = Field(default=None, description="CORS origins as JSON string or comma-separated")
+    CORS_ORIGINS: Optional[str] = Field(
+        default=None, 
+        description="CORS origins as JSON string or comma-separated"
+    )
+    
+    @model_validator(mode='after')
+    @classmethod
+    def parse_cors_origins_after_validation(cls, model: 'Settings') -> 'Settings':
+        """Parse CORS_ORIGINS after validation and set cors_origins"""
+        if model.CORS_ORIGINS and model.CORS_ORIGINS.strip():
+            try:
+                # Try parsing as JSON first
+                parsed = json.loads(model.CORS_ORIGINS)
+                if isinstance(parsed, list):
+                    model.cors_origins = parsed
+                    return model
+            except (json.JSONDecodeError, TypeError, ValueError):
+                # If not JSON, treat as comma-separated string
+                origins = [origin.strip() for origin in model.CORS_ORIGINS.split(',') if origin.strip()]
+                if origins:
+                    model.cors_origins = origins
+        return model
     
     def get_cors_origins(self) -> list[str]:
         """Get CORS origins, parsing from CORS_ORIGINS env var if provided"""
@@ -76,7 +97,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
-        case_sensitive = False
+        case_sensitive = True  # Make case-sensitive so CORS_ORIGINS doesn't map to cors_origins
         extra = "ignore"  # Ignore extra fields from environment
 
 
