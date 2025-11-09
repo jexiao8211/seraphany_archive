@@ -5,7 +5,7 @@ import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { getOrder, cancelOrder } from '../services/api'
-import type { Order } from '../types'
+import type { OrderItem } from '../types'
 
 const OrderDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -122,7 +122,7 @@ const OrderDetailsPage: React.FC = () => {
         <div className="order-items-section">
           <h2 className="order-section-title">Items Ordered</h2>
           <div className="order-items-list">
-            {order.items.map((item, index) => (
+            {order.items.map((item: OrderItem, index: number) => (
               <div key={index} className="order-item-detail">
                 <div className="order-item-info">
                   <h3 className="order-item-name">{item.product_name}</h3>

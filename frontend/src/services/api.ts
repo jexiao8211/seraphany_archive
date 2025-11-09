@@ -2,7 +2,7 @@
  * API service for communicating with the backend
  */
 import axios from 'axios'
-import type { Product, User, ShippingAddress, LoginCredentials, RegisterData, AuthToken } from '../types'
+import type { Product, User, ShippingAddress, LoginCredentials, RegisterData, AuthToken, Order } from '../types'
 import { authStorage } from '../utils/auth'
 import { API_BASE_URL } from '../config/constants'
 

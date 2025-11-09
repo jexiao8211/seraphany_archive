@@ -5,7 +5,7 @@ import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getOrder } from '../services/api'
-import type { Order } from '../types'
+import type { OrderItem } from '../types'
 
 const OrderConfirmationPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>()
@@ -96,7 +96,7 @@ const OrderConfirmationPage: React.FC = () => {
           <h2 className="order-items-title">Items Ordered</h2>
           
           <div className="order-items-list">
-            {order.items.map((item, index) => (
+            {order.items.map((item: OrderItem, index: number) => (
               <div key={index} className="order-item">
                 <div className="order-item-details">
                   <h3 className="order-item-name">{item.product_name}</h3>

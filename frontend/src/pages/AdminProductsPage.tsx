@@ -1,7 +1,7 @@
 /**
  * Admin Products Page - Display all products with admin actions
  */
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts, deleteProduct } from '../services/api'

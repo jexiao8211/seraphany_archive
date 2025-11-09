@@ -1,7 +1,8 @@
 /**
  * Authentication context for managing user state
  */
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import type { User, RegisterData } from '../types'
 import * as api from '../services/api'
 import { authStorage } from '../utils/auth'
@@ -81,7 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (userData: RegisterData) => {
     try {
       // Call register API
-      const newUser = await api.register(userData)
+      await api.register(userData)
       
       // After registration, log the user in automatically
       await login(userData.email, userData.password)
