@@ -17,8 +17,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Copy and make entrypoint script executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port (Railway will set PORT env var dynamically)
 EXPOSE 8080
 
-# Run the application (use sh to expand $PORT)
-CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
