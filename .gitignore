@@ -3,6 +3,12 @@
 /TESTING.md
 /TEST_COMMANDS.md
 
+# Environment files
+.env
+.env.*
+!.example_env
+!.example_env.*
+
 # Python
 __pycache__/
 *.py[cod]
