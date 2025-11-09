@@ -26,8 +26,12 @@ RUN npm install -g serve
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
+# Copy and make entrypoint script executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port
 EXPOSE 8080
 
-# Start the server
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-8080}"]
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
