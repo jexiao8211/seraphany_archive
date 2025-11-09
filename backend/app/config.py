@@ -2,8 +2,9 @@
 Centralized configuration for the backend application
 """
 import os
+import json
 from typing import Optional
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -51,6 +52,18 @@ class Settings(BaseSettings):
         default=["http://localhost:5173", "http://127.0.0.1:5173"],
         description="Allowed CORS origins"
     )
+    CORS_ORIGINS: Optional[str] = Field(default=None, description="CORS origins as JSON string or comma-separated")
+    
+    def get_cors_origins(self) -> list[str]:
+        """Get CORS origins, parsing from CORS_ORIGINS env var if provided"""
+        if self.CORS_ORIGINS:
+            try:
+                # Try parsing as JSON first
+                return json.loads(self.CORS_ORIGINS)
+            except (json.JSONDecodeError, TypeError):
+                # If not JSON, try comma-separated
+                return [origin.strip() for origin in self.CORS_ORIGINS.split(',')]
+        return self.cors_origins
     
     # Application Configuration
     app_name: str = Field(default="Storefront API", description="Seraphany")
