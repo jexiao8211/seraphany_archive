@@ -3,7 +3,41 @@
  */
 
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+function getApiBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  
+  // If no env var is set, use localhost for development
+  if (!envUrl || typeof envUrl !== 'string' || envUrl.trim() === '') {
+    if (import.meta.env.PROD) {
+      console.error(
+        '⚠️ VITE_API_BASE_URL is not set in production! Falling back to localhost:8000. ' +
+        'This will cause CORS errors. Please set VITE_API_BASE_URL in your Railway environment variables.'
+      )
+    }
+    return 'http://localhost:8000'
+  }
+  
+  const trimmedUrl = envUrl.trim()
+  
+  // Ensure URL has a protocol
+  if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+    console.warn(
+      `⚠️ VITE_API_BASE_URL is missing protocol. Adding https://. ` +
+      `Current value: "${trimmedUrl}". ` +
+      `Please set VITE_API_BASE_URL with full URL including protocol (e.g., https://backend.up.railway.app)`
+    )
+    return `https://${trimmedUrl}`
+  }
+  
+  // Log in development to help debug
+  if (import.meta.env.DEV) {
+    console.log('🔧 API Base URL:', trimmedUrl)
+  }
+  
+  return trimmedUrl
+}
+
+export const API_BASE_URL = getApiBaseUrl()
 
 // Image Upload Configuration
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB in bytes

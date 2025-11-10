@@ -30,12 +30,16 @@ VITE_NODE_ENV=production
 
 ### 3. Configure Environment Variables
 
+**⚠️ CRITICAL: Vite environment variables are embedded at BUILD TIME, not runtime!**
+
 In Railway, go to your Frontend Service → Variables:
 
 **Required:**
-- `VITE_API_BASE_URL` = `https://seraphanyarchive-production.up.railway.app`
+- `VITE_API_BASE_URL` = `https://your-backend-service.up.railway.app` (your backend's Railway public URL)
 - `VITE_NODE_ENV` = `production`
 - `NODE_ENV` = `production`
+
+**Important:** After setting `VITE_API_BASE_URL`, you MUST trigger a new deployment/rebuild for the change to take effect. Railway will automatically rebuild when you save the environment variable, but if it doesn't, manually trigger a redeploy.
 
 ### 4. Railway Auto-Detection
 
@@ -85,9 +89,13 @@ Railway will:
 - Check Railway logs
 
 ### API Connection Fails
-- Verify `VITE_API_BASE_URL` is set correctly
+- **Most Common Issue:** `VITE_API_BASE_URL` not set or build happened before setting it
+  - Verify `VITE_API_BASE_URL` is set to your backend's Railway URL (e.g., `https://backend-seraphanyarchive-prod.up.railway.app`)
+  - **Trigger a new build** after setting the variable (Railway should auto-rebuild, but check the deployment logs)
+  - Check that the build logs show the correct API URL being used
 - Check backend CORS includes your Railway frontend domain
 - Check browser console for CORS errors
+- Verify you're using HTTPS URLs (not HTTP) for both frontend and backend in production
 
 ## Advantages of Railway for Frontend
 

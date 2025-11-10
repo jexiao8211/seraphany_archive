@@ -62,11 +62,11 @@ const Header: React.FC = () => {
         <div className="header-main-container">
           {/* Logo */}
           <Link to="/" className="header-logo">
-            Vintage Store
+            Seraphany Archive
           </Link>
 
-          {/* Main Navigation */}
-          <nav className="header-nav">
+          {/* Left Navigation - Shop, Rentals, Appointments */}
+          <nav className="header-nav header-nav-left">
             <Link to="/products" className="header-nav-link">
               Shop
             </Link>
@@ -76,6 +76,10 @@ const Header: React.FC = () => {
             <Link to="/appointments" className="header-nav-link">
               Showroom Appointments
             </Link>
+          </nav>
+
+          {/* Right Navigation - About, Search, Cart, Login */}
+          <nav className="header-nav header-nav-right">
             <Link to="/about" className="header-nav-link">
               About
             </Link>

@@ -66,13 +66,15 @@ class Settings(BaseSettings):
                 # Try parsing as JSON first
                 parsed = json.loads(model.CORS_ORIGINS)
                 if isinstance(parsed, list):
-                    model.cors_origins = parsed
+                    # Normalize origins to ensure they have protocols
+                    model.cors_origins = [cls._normalize_origin(origin) for origin in parsed]
                     return model
             except (json.JSONDecodeError, TypeError, ValueError):
                 # If not JSON, treat as comma-separated string
                 origins = [origin.strip() for origin in model.CORS_ORIGINS.split(',') if origin.strip()]
                 if origins:
-                    model.cors_origins = origins
+                    # Normalize origins to ensure they have protocols
+                    model.cors_origins = [cls._normalize_origin(origin) for origin in origins]
         return model
     
     def get_cors_origins(self) -> list[str]:
@@ -80,11 +82,40 @@ class Settings(BaseSettings):
         if self.CORS_ORIGINS:
             try:
                 # Try parsing as JSON first
-                return json.loads(self.CORS_ORIGINS)
+                origins = json.loads(self.CORS_ORIGINS)
+                if isinstance(origins, list):
+                    return [self._normalize_origin(origin) for origin in origins]
             except (json.JSONDecodeError, TypeError):
                 # If not JSON, try comma-separated
-                return [origin.strip() for origin in self.CORS_ORIGINS.split(',')]
-        return self.cors_origins
+                origins = [origin.strip() for origin in self.CORS_ORIGINS.split(',') if origin.strip()]
+                return [self._normalize_origin(origin) for origin in origins]
+        
+        # Normalize default origins too
+        return [self._normalize_origin(origin) for origin in self.cors_origins]
+    
+    @staticmethod
+    def _normalize_origin(origin: str) -> str:
+        """
+        Normalize CORS origin to ensure it has a protocol.
+        CORS origins must match exactly what the browser sends in the Origin header,
+        which always includes the protocol (http:// or https://).
+        """
+        if not origin or not isinstance(origin, str):
+            return origin
+        
+        origin = origin.strip()
+        
+        # If origin already has protocol, return as-is
+        if origin.startswith('http://') or origin.startswith('https://'):
+            return origin
+        
+        # If no protocol, assume https:// for production domains
+        # (localhost can stay as http:// for development)
+        if 'localhost' in origin or '127.0.0.1' in origin:
+            return f'http://{origin}'
+        else:
+            # For production domains, default to https://
+            return f'https://{origin}'
     
     # Application Configuration
     app_name: str = Field(default="Storefront API", description="Seraphany")

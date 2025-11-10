@@ -4,8 +4,8 @@
  */
 
 .header {
-  background-color: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
+  background-color: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -13,30 +13,33 @@
 
 /* Main Navigation Bar - Logo and Nav Links */
 .header-main-nav {
-  border-bottom: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header-main-container {
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--spacing-sm);
   display: flex;
-  justify-content: space-between;
   align-items: center;
   height: 3.5rem;
+  gap: var(--spacing-2xl);
+  justify-content: space-between;
 }
 
 /* Logo */
 .header-logo {
+  font-family: var(--font-family-serif);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-normal);
-  color: var(--color-gray-900);
+  color: var(--color-text-primary);
   text-decoration: none;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
 }
 
 .header-logo:hover {
-  color: var(--color-gray-900);
+  color: var(--color-primary);
 }
 
 /* Navigation */
@@ -46,8 +49,20 @@
   align-items: center;
 }
 
+.header-nav-left {
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+.header-nav-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
 .header-nav-link {
-  color: var(--color-gray-900);
+  color: var(--color-text-secondary);
   font-weight: var(--font-weight-normal);
   font-size: var(--font-size-sm);
   transition: color var(--transition-fast);
@@ -57,16 +72,16 @@
 }
 
 .header-nav-link:hover {
-  color: var(--color-gray-700);
+  color: var(--color-text-primary);
 }
 
 .header-nav-link.admin-link {
-  color: var(--color-gray-900);
+  color: var(--color-text-secondary);
   font-weight: var(--font-weight-normal);
 }
 
 .header-nav-link.admin-link:hover {
-  color: var(--color-gray-700);
+  color: var(--color-primary);
 }
 
 .header-logout-button {
@@ -90,16 +105,22 @@
 
 .header-search-input {
   padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   width: 10rem;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
   transition: border-color var(--transition-fast);
+}
+
+.header-search-input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .header-search-input:focus {
   outline: none;
-  border-color: var(--color-gray-600);
+  border-color: var(--color-border-light);
 }
 
 .header-cart-link {

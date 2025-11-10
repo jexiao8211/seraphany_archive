@@ -4,31 +4,40 @@
  */
 
 :root {
-  /* Colors - Primary */
-  --color-primary: #7c3aed;        /* Purple 600 */
-  --color-primary-dark: #6d28d9;   /* Purple 700 */
-  --color-primary-light: #a78bfa;  /* Purple 400 */
+  /* Colors - Primary (Gothic/Cathedral inspired) */
+  --color-primary: #d4af37;        /* Gold accent */
+  --color-primary-dark: #b8941f;   /* Darker gold */
+  --color-primary-light: #e8d5a3;  /* Light gold */
   
   /* Colors - Secondary */
-  --color-secondary: #2563eb;      /* Blue 600 */
-  --color-secondary-dark: #1d4ed8; /* Blue 700 */
+  --color-secondary: #8b7355;      /* Bronze */
+  --color-secondary-dark: #6b5d4d; /* Dark bronze */
   
-  /* Colors - Neutral */
+  /* Colors - Neutral (Dark theme) */
   --color-white: #ffffff;
   --color-black: #000000;
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-900: #111827;
+  --color-bg-primary: #0a0a0a;     /* Deep black background */
+  --color-bg-secondary: #1a1a1a;   /* Slightly lighter black */
+  --color-text-primary: #f5f5f5;   /* Light text */
+  --color-text-secondary: #d0d0d0; /* Secondary text */
+  --color-text-muted: #999999;     /* Muted text */
+  --color-border: #2a2a2a;          /* Subtle borders */
+  --color-border-light: #3a3a3a;   /* Lighter borders */
+  
+  /* Legacy gray variables for compatibility */
+  --color-gray-50: #1a1a1a;
+  --color-gray-100: #2a2a2a;
+  --color-gray-200: #3a3a3a;
+  --color-gray-300: #4a4a4a;
+  --color-gray-600: #999999;
+  --color-gray-700: #d0d0d0;
+  --color-gray-900: #f5f5f5;
   
   /* Colors - Semantic */
-  --color-success: #10b981;
-  --color-error: #ef4444;
-  --color-warning: #f59e0b;
-  --color-info: #3b82f6;
+  --color-success: #4a9b5a;
+  --color-error: #c44d4d;
+  --color-warning: #d4af37;
+  --color-info: #6b8ba3;
   
   /* Spacing */
   --spacing-xs: 0.25rem;   /* 4px */
@@ -42,6 +51,8 @@
   /* Typography */
   --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-serif: 'Playfair Display', 'Cormorant Garamond', 'Times New Roman', 
+    'Georgia', 'Palatino', serif;
   --font-family-mono: 'Courier New', monospace;
   
   --font-size-xs: 0.75rem;    /* 12px */
@@ -70,11 +81,11 @@
   --radius-xl: 1rem;      /* 16px */
   --radius-full: 9999px;
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* Shadows (lighter for dark theme) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.5);
   
   /* Transitions */
   --transition-fast: 150ms ease-in-out;

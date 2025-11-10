@@ -10,3 +10,12 @@ DATABASE_URL="postgresql://postgres:password@localhost:5432/vintage_store_dev"
 # Application Configuration
 SECRET_KEY="your-secret-key-here-change-in-production"
 DEBUG=True
+
+# CORS Configuration
+# For production, use full URLs with https:// protocol
+# Multiple origins can be comma-separated or JSON array
+# Examples:
+# CORS_ORIGINS="https://frontend-seraphanyarchive-prod.up.railway.app"
+# CORS_ORIGINS="https://frontend.up.railway.app,https://localhost:5173"
+# CORS_ORIGINS='["https://frontend.up.railway.app","http://localhost:5173"]'
+CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
