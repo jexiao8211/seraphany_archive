@@ -14,11 +14,13 @@
 
 /* 4. Component styles */
 @import './styles/components/header.css';
+@import './styles/components/footer.css';
 @import './styles/components/loading.css';
 @import './styles/components/image-upload.css';
 @import './styles/components/toast.css';
 @import './styles/components/image-gallery.css';
 @import './styles/components/product-list.css';
+@import './styles/components/search-dropdown.css';
 
 /* 5. Page styles */
 @import './styles/pages/home.css';

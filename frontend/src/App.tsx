@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CartProvider } from './contexts/CartContext'
 import { ToastProvider } from './contexts/ToastContext'
 import Header from './components/Header'
+import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
 import HomePage from './pages/HomePage'
 import ProductsPage from './pages/ProductsPage'
@@ -23,6 +24,9 @@ import CheckoutPage from './pages/CheckoutPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import OrdersPage from './pages/OrdersPage'
 import OrderDetailsPage from './pages/OrderDetailsPage'
+import RentalsPage from './pages/RentalsPage'
+import AppointmentsPage from './pages/AppointmentsPage'
+import AboutPage from './pages/AboutPage'
 import AdminRoute from './components/AdminRoute'
 
 // Create a client for React Query
@@ -60,6 +64,9 @@ const AppContent: React.FC = () => {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/rentals" element={<RentalsPage />} />
+          <Route path="/appointments" element={<AppointmentsPage />} />
+          <Route path="/about" element={<AboutPage />} />
           
           {/* Admin Routes */}
           <Route path="/admin/products" element={
@@ -103,6 +110,7 @@ const AppContent: React.FC = () => {
           } />
         </Routes>
       </main>
+      <Footer />
     </div>
   )
 }
