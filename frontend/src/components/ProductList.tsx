@@ -10,15 +10,18 @@ import { useToast } from '../contexts/ToastContext'
 import { useFirstImageUrl } from '../hooks/useImageUrl'
 import type { Product } from '../types'
 
-const ProductList: React.FC = () => {
+interface ProductListProps {
+  searchQuery?: string
+}
+
+const ProductList: React.FC<ProductListProps> = ({ searchQuery = '' }) => {
   const [category, setCategory] = useState('')
-  const [search, setSearch] = useState('')
   const { addItem } = useCart()
   const { showSuccess } = useToast()
 
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ['products', category, search],
-    queryFn: () => getProducts({ category, search }),
+    queryKey: ['products', category, searchQuery],
+    queryFn: () => getProducts({ category, search: searchQuery || undefined }),
   })
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
@@ -45,15 +48,6 @@ const ProductList: React.FC = () => {
     <div className="product-list-container">
       {/* Filters */}
       <div className="product-filters">
-        <div className="filter-search">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="filter-input"
-          />
-        </div>
         <div className="filter-category">
           <label htmlFor="category-filter" className="filter-label">
             Category
