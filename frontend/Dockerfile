@@ -8,16 +8,18 @@ WORKDIR /app
 ARG VITE_API_BASE_URL
 ARG NODE_ENV=production
 
-# Set as environment variables so Vite can access them during build
-# Use ARG value if provided, otherwise Railway's ENV will be used
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
-ENV NODE_ENV=${NODE_ENV:-production}
-
-# Copy package files
+# Copy package files first
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install ALL dependencies (including devDependencies) needed for build
+# We can't set NODE_ENV=production yet because npm ci would skip devDependencies
+# and we need TypeScript (in devDependencies) to build
+RUN npm ci --include=dev
+
+# Now set environment variables for the build
+# Vite needs these during build time
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV NODE_ENV=${NODE_ENV:-production}
 
 # Copy source code
 COPY . .
