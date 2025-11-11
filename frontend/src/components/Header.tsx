@@ -62,7 +62,7 @@ const Header: React.FC = () => {
         <div className="header-main-container">
           {/* Logo */}
           <Link to="/" className="header-logo">
-            Seraphany Archive
+            <span className="logo-letter">S</span>eraphany <span className="logo-letter">A</span>rchive
           </Link>
 
           {/* Left Navigation - Shop, Rentals, Appointments */}

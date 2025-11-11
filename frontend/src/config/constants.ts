@@ -29,9 +29,12 @@ function getApiBaseUrl(): string {
     return `https://${trimmedUrl}`
   }
   
-  // Log in development to help debug
+  // Log the API URL in both dev and prod for debugging
   if (import.meta.env.DEV) {
-    console.log('🔧 API Base URL:', trimmedUrl)
+    console.log('🔧 API Base URL (dev):', trimmedUrl)
+  } else {
+    // In production, log once to help debug deployment issues
+    console.log('🔧 API Base URL (prod):', trimmedUrl)
   }
   
   return trimmedUrl

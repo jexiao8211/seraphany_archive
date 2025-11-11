@@ -28,11 +28,10 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-family-serif);
+  font-family: var(--font-family-base);
   font-weight: var(--font-weight-normal);
   line-height: var(--line-height-tight);
   color: var(--color-text-primary);
-  letter-spacing: 0.02em;
 }
 
 h1 {

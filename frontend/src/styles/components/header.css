@@ -29,17 +29,25 @@
 
 /* Logo */
 .header-logo {
-  font-family: var(--font-family-serif);
+  font-family: var(--font-family-base);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-normal);
   color: var(--color-text-primary);
   text-decoration: none;
-  letter-spacing: 0.08em;
   flex-shrink: 0;
 }
 
 .header-logo:hover {
   color: var(--color-primary);
+}
+
+.logo-letter {
+  font-family: var(--font-family-ornate);
+  font-weight: var(--font-weight-bold);
+  font-size: 2.5em;
+  line-height: 0.8;
+  display: inline-block;
+  vertical-align: baseline;
 }
 
 /* Navigation */

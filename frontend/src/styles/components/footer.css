@@ -31,7 +31,7 @@
 }
 
 .footer-title {
-  font-family: var(--font-family-serif);
+  font-family: var(--font-family-base);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-normal);
   color: var(--color-text-primary);
