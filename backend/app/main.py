@@ -103,6 +103,9 @@ class Order(BaseModel):
 class OrderStatusUpdate(BaseModel):
     status: str
 
+class AdminStatusUpdate(BaseModel):
+    is_admin: bool
+
 # Mock data for testing (will be replaced with database)
 mock_products = [
     Product(id=1, name="Vintage Chanel Dress", description="Beautiful vintage Chanel dress", 
@@ -691,6 +694,61 @@ async def cancel_order(order_id: int, current_user: User = Depends(get_current_u
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cancel order: {str(e)}"
+        )
+
+# Admin user management endpoints
+@app.get("/admin/users", response_model=Dict[str, Any])
+async def get_all_users(
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_admin_user),
+    db: DatabaseService = Depends(get_database_service)
+):
+    """Get all users (admin only)."""
+    try:
+        users = db.get_all_users(page=page, limit=limit)
+        return users
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve users: {str(e)}"
+        )
+
+@app.put("/admin/users/{user_id}/admin-status", response_model=User)
+async def update_user_admin_status(
+    user_id: int,
+    admin_status: AdminStatusUpdate,
+    current_user: User = Depends(get_admin_user),
+    db: DatabaseService = Depends(get_database_service)
+):
+    """Update a user's admin status (admin only)."""
+    try:
+        # Prevent users from removing their own admin status
+        if user_id == current_user.id and not admin_status.is_admin:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You cannot remove your own admin status"
+            )
+        
+        updated_user = db.update_user_admin_status(user_id, admin_status.is_admin)
+        return User(
+            id=updated_user["id"],
+            email=updated_user["email"],
+            first_name=updated_user["first_name"],
+            last_name=updated_user["last_name"],
+            is_admin=updated_user["is_admin"]
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update user admin status: {str(e)}"
         )
 
 # Health check endpoint
