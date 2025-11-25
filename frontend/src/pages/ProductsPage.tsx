@@ -11,9 +11,6 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="products-page">
-      <h1 className="products-title">
-        {searchQuery ? `Search Results for "${searchQuery}"` : 'Our Products'}
-      </h1>
       <ProductList searchQuery={searchQuery} />
     </div>
   )

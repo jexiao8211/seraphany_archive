@@ -60,11 +60,6 @@ const Header: React.FC = () => {
       {/* Main Navigation Bar - Logo and Nav Links */}
       <div className="header-main-nav">
         <div className="header-main-container">
-          {/* Logo */}
-          <Link to="/" className="header-logo">
-            <span className="logo-letter">S</span>eraphany <span className="logo-letter">A</span>rchive
-          </Link>
-
           {/* Left Navigation - Shop, Rentals, Appointments */}
           <nav className="header-nav header-nav-left">
             <Link to="/products" className="header-nav-link">
@@ -78,12 +73,17 @@ const Header: React.FC = () => {
             </Link>
           </nav>
 
-          {/* Right Navigation - About, Search, Cart, Login */}
+          {/* Logo - Centered */}
+          <Link to="/products" className="header-logo">
+            <img 
+              src="/logo.png" 
+              alt="Seraphany Archive" 
+              className="header-logo-image"
+            />
+          </Link>
+
+          {/* Right Navigation - Search, Cart, Login, About */}
           <nav className="header-nav header-nav-right">
-            <Link to="/about" className="header-nav-link">
-              About
-            </Link>
-            
             {/* Search */}
             <div className="header-search-wrapper" ref={searchRef}>
               <form onSubmit={handleSearchSubmit} className="header-search-form">
@@ -131,6 +131,11 @@ const Header: React.FC = () => {
                 Admin
               </Link>
             )}
+            
+            {/* About - Rightmost */}
+            <Link to="/about" className="header-nav-link">
+              About
+            </Link>
           </nav>
         </div>
       </div>

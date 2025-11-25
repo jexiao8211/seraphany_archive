@@ -1,5 +1,5 @@
 /**
- * ImageUpload Component - Drag and drop file upload with preview
+ * ImageUpload Component - Drag and drop file upload with preview and image reordering
  */
 import React, { useState, useRef, useCallback } from 'react'
 import { uploadProductImages } from '../services/api'
@@ -29,6 +29,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [dragActive, setDragActive] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Handle drag events
@@ -42,18 +44,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFiles(Array.from(e.dataTransfer.files))
-    }
-  }, [])
-
   // Handle file selection
-  const handleFiles = (files: File[]) => {
+  const handleFiles = useCallback((files: File[]) => {
     const validFiles: File[] = []
     const errors: string[] = []
 
@@ -82,22 +74,35 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       alert(errors.join('\n'))
     }
 
-    // Check total file limit
-    const totalFiles = uploadedFiles.length + validFiles.length
-    if (totalFiles > maxFiles) {
-      alert(`Maximum ${maxFiles} files allowed.`)
-      return
+    // Check total file limit using functional update to get current state
+    setUploadedFiles(prev => {
+      const totalFiles = prev.length + validFiles.length
+      if (totalFiles > maxFiles) {
+        alert(`Maximum ${maxFiles} files allowed.`)
+        return prev
+      }
+
+      // Create preview objects
+      const newFiles: UploadedFile[] = validFiles.map(file => ({
+        file,
+        preview: URL.createObjectURL(file),
+        uploading: false
+      }))
+
+      return [...prev, ...newFiles]
+    })
+  }, [maxFiles])
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    // Only handle file drops (not image reordering)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(Array.from(e.dataTransfer.files))
     }
-
-    // Create preview objects
-    const newFiles: UploadedFile[] = validFiles.map(file => ({
-      file,
-      preview: URL.createObjectURL(file),
-      uploading: false
-    }))
-
-    setUploadedFiles(prev => [...prev, ...newFiles])
-  }
+  }, [handleFiles])
 
   // Handle file input change
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,6 +123,56 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const removeExistingImage = (index: number) => {
     const newExistingImages = existingImages.filter((_, i) => i !== index)
     onImagesChange(newExistingImages)
+  }
+
+  // Handle drag start for reordering
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index)
+  }
+
+  // Handle drag over for reordering
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index)
+    }
+  }
+
+  // Handle drag leave for reordering
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  // Handle drop for reordering
+  const handleImageReorderDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+
+    const newImages = [...existingImages]
+    const draggedImage = newImages[draggedIndex]
+    
+    // Remove the dragged item
+    newImages.splice(draggedIndex, 1)
+    
+    // Insert at new position
+    newImages.splice(dropIndex, 0, draggedImage)
+    
+    onImagesChange(newImages)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  // Handle drag end for reordering
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
   }
 
   // Upload files
@@ -163,14 +218,27 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         {/* Existing Images */}
         {existingImages.length > 0 && (
           <div className="existing-images">
-            <h4>Current Images:</h4>
+            <h4>Current Images (drag to reorder):</h4>
             <div className="image-preview-grid">
               {existingImages.map((imagePath, index) => (
-                <div key={index} className="image-preview-item">
+                <div
+                  key={index}
+                  className={`image-preview-item ${draggedIndex === index ? 'dragging' : ''} ${dragOverIndex === index ? 'drag-over' : ''}`}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleImageReorderDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="drag-handle" title="Drag to reorder">
+                    ⋮⋮
+                  </div>
                   <img 
                     src={useImageUrl(imagePath)}
                     alt={`Product ${index + 1}`}
                     className="image-preview"
+                    draggable={false}
                   />
                   <button
                     type="button"
@@ -192,7 +260,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
-          onDrop={handleDrop}
+          onDrop={handleFileDrop}
         >
           <div className="upload-content">
             <div className="upload-icon">📁</div>

@@ -361,15 +361,17 @@
 ### Frontend Implementation
 - ✅ **ImageUpload Component**: Drag-and-drop interface with preview
 - ✅ **Admin Forms Integration**: Both create and edit pages updated
-- ✅ **Auto-refresh Fix**: Product list refreshes after edit operations
+- ✅ **Auto-refresh Fix**: Product list refreshes after edit operations (query invalidation fixed) ✅
 - ✅ **File Management**: Upload, preview, and remove images
 - ✅ **Validation Feedback**: Client-side file type and size validation
+- ✅ **Image Reordering**: Drag-and-drop reordering with visual feedback ✅
 
 ### Features
 - **Multi-file Upload**: Drag-and-drop multiple images at once
 - **Image Previews**: Thumbnail previews with remove buttons
 - **Progress Indicators**: Upload status and error handling
 - **Existing Image Management**: Edit existing product images
+- **Image Reordering**: Drag-and-drop reordering of existing images in edit mode ✅
 - **Cloud-Ready**: Architecture supports easy migration to S3/R2/etc.
 
 ## 🧹 **Codebase Cleanup & Refactoring** ✅ **COMPLETE**

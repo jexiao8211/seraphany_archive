@@ -104,6 +104,47 @@
   overflow: hidden;
   background: var(--color-background-light);
   border: 1px solid var(--color-border);
+  cursor: grab;
+  transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.image-preview-item:active {
+  cursor: grabbing;
+}
+
+.image-preview-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.image-preview-item.drag-over {
+  border-color: var(--color-primary);
+  border-width: 2px;
+  transform: scale(1.05);
+}
+
+.drag-handle {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 10;
+  line-height: 1;
+  letter-spacing: -2px;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .image-preview {

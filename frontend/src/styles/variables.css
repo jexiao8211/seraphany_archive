@@ -18,25 +18,25 @@
   --color-accent-purple: #5a4a6b;  /* Deep muted purple */
   --color-accent-red: #6b4a4a;     /* Deep muted red */
   
-  /* Colors - Neutral (Dark theme) */
+  /* Colors - Neutral (White theme) */
   --color-white: #ffffff;
   --color-black: #000000;
-  --color-bg-primary: #0a0a0a;     /* Deep black background */
-  --color-bg-secondary: #1a1a1a;   /* Slightly lighter black */
-  --color-text-primary: #f5f5f5;   /* Light text */
-  --color-text-secondary: #d0d0d0; /* Secondary text */
-  --color-text-muted: #999999;     /* Muted text */
-  --color-border: #2a2a2a;          /* Subtle borders */
-  --color-border-light: #3a3a3a;   /* Lighter borders */
+  --color-bg-primary: #ffffff;     /* White background */
+  --color-bg-secondary: #f5f5f5;   /* Light gray background */
+  --color-text-primary: #1a1a1a;   /* Dark text */
+  --color-text-secondary: #4a4a4a; /* Secondary text */
+  --color-text-muted: #6b6b6b;     /* Muted text */
+  --color-border: #e0e0e0;          /* Light borders */
+  --color-border-light: #d0d0d0;   /* Lighter borders */
   
   /* Legacy gray variables for compatibility */
-  --color-gray-50: #1a1a1a;
-  --color-gray-100: #2a2a2a;
-  --color-gray-200: #3a3a3a;
-  --color-gray-300: #4a4a4a;
-  --color-gray-600: #999999;
-  --color-gray-700: #d0d0d0;
-  --color-gray-900: #f5f5f5;
+  --color-gray-50: #f5f5f5;
+  --color-gray-100: #e0e0e0;
+  --color-gray-200: #d0d0d0;
+  --color-gray-300: #b0b0b0;
+  --color-gray-600: #6b6b6b;
+  --color-gray-700: #4a4a4a;
+  --color-gray-900: #1a1a1a;
   
   /* Colors - Semantic */
   --color-success: #4a9b5a;
@@ -86,11 +86,11 @@
   --radius-xl: 1rem;      /* 16px */
   --radius-full: 9999px;
   
-  /* Shadows (lighter for dark theme) */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+  /* Shadows (for white theme) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   
   /* Transitions */
   --transition-fast: 150ms ease-in-out;

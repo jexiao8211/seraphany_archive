@@ -41,9 +41,16 @@ const AdminProductEditPage: React.FC = () => {
 
   const updateProductMutation = useMutation({
     mutationFn: (data: Parameters<typeof updateProduct>[1]) => updateProduct(productId, data),
-    onSuccess: () => {
-      // Invalidate admin products cache to trigger refresh
+    onSuccess: (updatedProduct) => {
+      // Update the specific product cache immediately
+      queryClient.setQueryData(['product', productId], updatedProduct)
+      
+      // Invalidate all product-related queries to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['product', productId] })
       queryClient.invalidateQueries({ queryKey: ['admin-products'] })
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['search-products'] })
+      
       showSuccess('Product updated successfully')
       navigate('/admin/products')
     },
