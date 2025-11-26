@@ -5,9 +5,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../services/api'
-import { useCart } from '../contexts/CartContext'
-import { useToast } from '../contexts/ToastContext'
-import { useFirstImageUrl, useImageUrl } from '../hooks/useImageUrl'
+import { useImageUrl } from '../hooks/useImageUrl'
 import type { Product } from '../types'
 
 interface ProductListProps {
@@ -65,8 +63,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
 const ProductList: React.FC<ProductListProps> = ({ searchQuery = '' }) => {
   const [category, setCategory] = useState('')
-  const { addItem } = useCart()
-  const { showSuccess } = useToast()
 
   // Fetch all products to extract available categories
   const { data: allProducts } = useQuery({
@@ -91,18 +87,6 @@ const ProductList: React.FC<ProductListProps> = ({ searchQuery = '' }) => {
     queryKey: ['products', category, searchQuery],
     queryFn: () => getProducts({ category, search: searchQuery || undefined }),
   })
-
-  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
-    e.preventDefault() // Prevent navigation when clicking Add to Cart
-    e.stopPropagation()
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: useFirstImageUrl(product.images),
-    })
-    showSuccess('Added to cart!')
-  }
 
   if (isLoading) {
     return <div className="loading-state">Loading...</div>
