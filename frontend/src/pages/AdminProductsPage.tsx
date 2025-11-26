@@ -100,10 +100,16 @@ const AdminProductsPage: React.FC = () => {
             className="admin-filter-select"
           >
             <option value="">All Categories</option>
-            <option value="dresses">Dresses</option>
-            <option value="bags">Bags</option>
             <option value="accessories">Accessories</option>
+            <option value="bags">Bags</option>
+            <option value="coats">Coats</option>
+            <option value="dresses">Dresses</option>
+            <option value="jackets">Jackets</option>
+            <option value="pants">Pants</option>
             <option value="shoes">Shoes</option>
+            <option value="shorts">Shorts</option>
+            <option value="skirts">Skirts</option>
+            <option value="tops">Tops</option>
           </select>
         </div>
       </div>

@@ -20,7 +20,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProduct }) => 
 
   // Filter out current product and limit to 6 items
   const relatedProducts = allProducts
-    ?.filter(product => product.id !== currentProduct.id && product.is_available)
+    ?.filter(product => product.id !== currentProduct.id)
     .slice(0, 6) || []
 
   if (isLoading) {
@@ -52,10 +52,13 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProduct }) => 
                 alt={product.name}
                 className="product-image"
               />
+              {!product.is_available && (
+                <span className="product-sold-out">Sold out</span>
+              )}
             </div>
             <div className="product-info">
               <h4 className="product-name">{product.name}</h4>
-              <p className="product-price">${product.price.toFixed(2)}</p>
+              <p className="product-price">${product.price.toFixed(2)} usd</p>
             </div>
           </Link>
         ))}

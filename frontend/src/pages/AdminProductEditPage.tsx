@@ -234,10 +234,16 @@ const AdminProductEditPage: React.FC = () => {
               className={`form-select ${errors.category ? 'error' : ''}`}
             >
               <option value="">Select a category</option>
-              <option value="dresses">Dresses</option>
-              <option value="bags">Bags</option>
               <option value="accessories">Accessories</option>
+              <option value="bags">Bags</option>
+              <option value="coats">Coats</option>
+              <option value="dresses">Dresses</option>
+              <option value="jackets">Jackets</option>
+              <option value="pants">Pants</option>
               <option value="shoes">Shoes</option>
+              <option value="shorts">Shorts</option>
+              <option value="skirts">Skirts</option>
+              <option value="tops">Tops</option>
             </select>
             {errors.category && <span className="form-error">{errors.category}</span>}
           </div>

@@ -76,15 +76,6 @@ const ProductDetailPage: React.FC = () => {
   return (
     <div className="product-detail-page">
       <div className="product-detail-container">
-        {/* Back Button */}
-        <button
-          onClick={handleBackToProducts}
-          className="back-button"
-          aria-label="Back to products"
-        >
-          ← Back to Products
-        </button>
-
         {/* Main Product Content */}
         <div className="product-content">
           {/* Image Gallery */}
@@ -94,22 +85,17 @@ const ProductDetailPage: React.FC = () => {
 
           {/* Product Information */}
           <div className="product-info">
-            <div className="product-header">
-              <h1 className="product-name">{product.name}</h1>
-              <div className="product-price">${product.price.toFixed(2)}</div>
+            <div className="product-brand">{product.category.toUpperCase()}</div>
+            <h1 className="product-name">{product.name}</h1>
+            <div className="product-price">${product.price.toFixed(2)} USD</div>
+            
+            <div className="product-shipping">
+              Shipping calculated at checkout.
             </div>
 
-            <div className="product-meta">
-              <span className="product-category">{product.category}</span>
-              <span className={`availability ${product.is_available ? 'in-stock' : 'out-of-stock'}`}>
-                {product.is_available ? 'In Stock' : 'Out of Stock'}
-              </span>
-            </div>
-
-            <div className="product-description">
-              <h3>Description</h3>
-              <p>{product.description}</p>
-            </div>
+            {!product.is_available && (
+              <div className="product-sold-out-badge">Sold out</div>
+            )}
 
             <div className="product-actions">
               <button
@@ -117,8 +103,12 @@ const ProductDetailPage: React.FC = () => {
                 disabled={!product.is_available}
                 className={`add-to-cart-btn ${!product.is_available ? 'disabled' : ''}`}
               >
-                {product.is_available ? 'Add to Cart' : 'Out of Stock'}
+                {product.is_available ? 'Add to cart' : 'Out of Stock'}
               </button>
+            </div>
+
+            <div className="product-description">
+              <p>{product.description}</p>
             </div>
           </div>
         </div>
