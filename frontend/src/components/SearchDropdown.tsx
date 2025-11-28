@@ -20,11 +20,13 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { data: products, isLoading } = useQuery({
+  const { data: productsData, isLoading } = useQuery({
     queryKey: ['search-products', searchQuery],
     queryFn: () => getProducts({ search: searchQuery, limit: 8 }),
     enabled: searchQuery.length > 0 && isOpen,
   })
+  
+  const products = productsData?.items
 
   if (!isOpen || searchQuery.length === 0) {
     return null

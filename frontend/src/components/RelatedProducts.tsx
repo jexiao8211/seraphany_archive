@@ -13,10 +13,12 @@ interface RelatedProductsProps {
 }
 
 const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProduct }) => {
-  const { data: allProducts, isLoading } = useQuery({
+  const { data: allProductsData, isLoading } = useQuery({
     queryKey: ['products', currentProduct.category],
     queryFn: () => getProducts({ category: currentProduct.category }),
   })
+  
+  const allProducts = allProductsData?.items
 
   // Filter out current product and limit to 6 items
   const relatedProducts = allProducts

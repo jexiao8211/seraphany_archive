@@ -72,9 +72,9 @@ const ProductList: React.FC<ProductListProps> = ({ searchQuery = '' }) => {
 
   // Extract unique categories from products
   const availableCategories = React.useMemo(() => {
-    if (!allProducts) return []
+    if (!allProducts?.items) return []
     const categories = new Set<string>()
-    allProducts.forEach(product => {
+    allProducts.items.forEach(product => {
       if (product.category) {
         categories.add(product.category)
       }
@@ -83,7 +83,7 @@ const ProductList: React.FC<ProductListProps> = ({ searchQuery = '' }) => {
   }, [allProducts])
 
   // Fetch filtered products
-  const { data: products, isLoading, error } = useQuery({
+  const { data: productsData, isLoading, error } = useQuery({
     queryKey: ['products', category, searchQuery],
     queryFn: () => getProducts({ category, search: searchQuery || undefined }),
   })
@@ -123,12 +123,12 @@ const ProductList: React.FC<ProductListProps> = ({ searchQuery = '' }) => {
 
       {/* Products Grid */}
       <div className="products-grid">
-        {products?.map((product) => (
+        {productsData?.items.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
-      {products?.length === 0 && (
+      {productsData?.items.length === 0 && (
         <div className="no-products">
           No products found matching your criteria.
         </div>

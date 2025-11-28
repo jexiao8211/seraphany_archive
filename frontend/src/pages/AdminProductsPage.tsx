@@ -17,10 +17,12 @@ const AdminProductsPage: React.FC = () => {
   const { showSuccess, showError } = useToast()
 
   // Fetch products
-  const { data: products = [], isLoading, error, refetch } = useQuery({
+  const { data: productsData, isLoading, error, refetch } = useQuery({
     queryKey: ['admin-products', searchTerm, categoryFilter],
     queryFn: () => getProducts({ search: searchTerm, category: categoryFilter || undefined })
   })
+
+  const products = productsData?.items || []
 
   const handleDelete = async (productId: number) => {
     if (!window.confirm('Are you sure you want to delete this product?')) {

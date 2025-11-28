@@ -52,11 +52,9 @@ export const getProducts = async (params?: {
   limit?: number
   category?: string
   search?: string
-}): Promise<Product[]> => {
+}): Promise<{ items: Product[]; total: number; page: number; limit: number }> => {
   const response = await api.get('/products', { params })
-  // Backend returns { items: [...], total, page, pages }
-  // Extract just the items array
-  return response.data.items || response.data
+  return response.data
 }
 
 export const getProduct = async (id: number): Promise<Product> => {

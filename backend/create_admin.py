@@ -15,8 +15,9 @@ Or set environment variables:
 """
 import os
 import sys
-from app.database import DatabaseService
-from app.auth import AuthService
+from app.database_config import SessionLocal
+from app.crud import user as user_crud
+from app.schemas import UserCreate
 
 def create_admin_user(
     email: str,
@@ -25,51 +26,60 @@ def create_admin_user(
     last_name: str = "User"
 ):
     """Create an admin user in the database"""
-    db = DatabaseService()
-    
-    # Check if user already exists
-    existing_user = db.get_user_by_email(email)
-    if existing_user:
-        print(f"[ERROR] User with email {email} already exists!")
-        response = input("Do you want to make this user an admin? (y/n): ")
-        if response.lower() == 'y':
-            # Update existing user to admin
-            update_user_to_admin(db, existing_user["id"], email)
-            return
-        else:
-            print("[CANCELLED] Exiting without changes.")
-            return
-    
-    # Create new admin user
-    user_data = {
-        "email": email,
-        "password": password,  # Will be hashed by create_user
-        "first_name": first_name,
-        "last_name": last_name,
-        "is_admin": True  # Set admin flag
-    }
-    
+    db = SessionLocal()
     try:
-        user = db.create_user(user_data)
+        # Check if user already exists
+        existing_user = user_crud.get_user_by_email(db, email)
+        if existing_user:
+            print(f"[ERROR] User with email {email} already exists!")
+            response = input("Do you want to make this user an admin? (y/n): ")
+            if response.lower() == 'y':
+                # Update existing user to admin
+                update_user_to_admin(db, existing_user.id, email)
+                return
+            else:
+                print("[CANCELLED] Exiting without changes.")
+                return
+        
+        # Create new admin user
+        user_data = UserCreate(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        
+        # user_crud.create_user creates a regular user. We need to make them admin.
+        # Or we can manually create admin.
+        # But simpler to create user then update to admin.
+        user = user_crud.create_user(db, user_data)
+        
+        # Update to admin
+        user = user_crud.update_user_admin_status(db, user.id, True)
+        
         print(f"[SUCCESS] Admin user created successfully!")
         print(f"  Email: {email}")
         print(f"  Name: {first_name} {last_name}")
-        print(f"  User ID: {user['id']}")
-        print(f"  Admin: True")
+        print(f"  User ID: {user.id}")
+        print(f"  Admin: {user.is_admin}")
+        
     except Exception as e:
         print(f"[ERROR] Failed to create admin user: {str(e)}")
         sys.exit(1)
+    finally:
+        db.close()
 
 
-def update_user_to_admin(db: DatabaseService, user_id: int, email: str):
+def update_user_to_admin(db, user_id: int, email: str):
     """Update an existing user to admin status"""
     try:
-        user = db.update_user_admin_status(user_id, is_admin=True)
-        print(f"[SUCCESS] User {email} has been promoted to admin!")
-        print(f"  User ID: {user['id']}")
-        print(f"  Admin: {user['is_admin']}")
-    except ValueError as e:
-        print(f"[ERROR] {str(e)}")
+        user = user_crud.update_user_admin_status(db, user_id, is_admin=True)
+        if user:
+            print(f"[SUCCESS] User {email} has been promoted to admin!")
+            print(f"  User ID: {user.id}")
+            print(f"  Admin: {user.is_admin}")
+        else:
+             print(f"[ERROR] User not found")
     except Exception as e:
         print(f"[ERROR] Failed to update user: {str(e)}")
 
@@ -123,4 +133,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
