@@ -18,6 +18,7 @@ const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const mobileSearchRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   const handleLogout = () => {
@@ -55,11 +56,18 @@ const Header: React.FC = () => {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      // Check if click is outside both desktop and mobile search containers
+      const isOutsideDesktopSearch = searchRef.current && !searchRef.current.contains(target)
+      const isOutsideMobileSearch = mobileSearchRef.current && !mobileSearchRef.current.contains(target)
+      
+      // Only close if click is outside BOTH search areas (or if one doesn't exist)
+      if (isOutsideDesktopSearch && (!mobileSearchRef.current || isOutsideMobileSearch)) {
         setIsSearchOpen(false)
         setIsSearchExpanded(false)
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+      
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
         setIsMobileMenuOpen(false)
       }
     }
@@ -188,7 +196,7 @@ const Header: React.FC = () => {
 
         {/* Mobile Search Bar (when expanded) */}
         {isSearchExpanded && (
-          <div className="header-mobile-search-bar" ref={searchRef}>
+          <div className="header-mobile-search-bar" ref={mobileSearchRef}>
             <form onSubmit={handleSearchSubmit} className="header-search-form-mobile">
               <input
                 type="text"
