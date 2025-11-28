@@ -5,7 +5,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
-from app.main import app, get_database_service
+from app.main import app
+from app.dependencies import get_database_service
 from app.models import Base
 from app.database import DatabaseService
 

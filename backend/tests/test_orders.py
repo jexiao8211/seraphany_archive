@@ -119,7 +119,7 @@ class TestOrderEndpoints:
         assert "Product with ID 99999 not found" in data["detail"]
     
     def test_create_order_with_zero_quantity(self, client, auth_helper, test_db_service):
-        """Test that zero quantity returns 400."""
+        """Test that zero quantity returns 422 (validation error)."""
         # Create authenticated user
         user_data, token = auth_helper.create_authenticated_user(
             email="customer3@example.com",
@@ -149,12 +149,10 @@ class TestOrderEndpoints:
             }
         }
         
-        # Test with authentication - should get 400 (Bad Request) for zero quantity
+        # Test with authentication - should get 422 (Unprocessable Entity) for validation error
         response = client.post("/orders", json=order_data, 
                               headers=auth_helper.get_auth_headers("customer3@example.com"))
-        assert response.status_code == 400
-        data = response.json()
-        assert "Quantity must be greater than 0" in data["detail"]
+        assert response.status_code == 422  # Pydantic validation error
     
     def test_get_user_orders_requires_authentication(self, client):
         """Test that GET /orders requires authentication."""

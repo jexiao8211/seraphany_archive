@@ -5,7 +5,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../services/api'
-import { useFirstImageUrl } from '../hooks/useImageUrl'
+import { getFirstImageUrl } from '../hooks/useImageUrl'
 import type { Product } from '../types'
 
 interface RelatedProductsProps {
@@ -48,7 +48,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ currentProduct }) => 
           >
             <div className="product-image-container">
               <img
-                src={useFirstImageUrl(product.images) || '/placeholder.jpg'}
+                src={getFirstImageUrl(product.images) || '/placeholder.jpg'}
                 alt={product.name}
                 className="product-image"
               />

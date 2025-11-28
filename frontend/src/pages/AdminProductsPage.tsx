@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getProducts, deleteProduct } from '../services/api'
 import { useToast } from '../contexts/ToastContext'
 import type { Product } from '../types'
-import { useFirstImageUrl } from '../hooks/useImageUrl'
+import { getFirstImageUrl } from '../hooks/useImageUrl'
 
 const AdminProductsPage: React.FC = () => {
   const navigate = useNavigate()
@@ -140,7 +140,7 @@ const AdminProductsPage: React.FC = () => {
                 <tr key={product.id}>
                   <td>
                     <img
-                      src={useFirstImageUrl(product.images) || 'https://via.placeholder.com/50'}
+                      src={getFirstImageUrl(product.images) || 'https://via.placeholder.com/50'}
                       alt={product.name}
                       className="product-thumbnail"
                     />

@@ -1,5 +1,7 @@
 /**
- * Hook for constructing image URLs with API base URL
+ * Utility functions for constructing image URLs with API base URL
+ * Note: These are NOT React hooks - they're pure functions.
+ * Named without "use" prefix to avoid confusion with React hooks.
  */
 import { API_BASE_URL } from '../config/constants'
 
@@ -8,7 +10,7 @@ import { API_BASE_URL } from '../config/constants'
  * @param imagePath - Relative image path (e.g., "/uploads/products/image.jpg")
  * @returns Full image URL or empty string if no path provided
  */
-export const useImageUrl = (imagePath?: string): string => {
+export const getImageUrl = (imagePath?: string): string => {
   if (!imagePath) return ''
   return `${API_BASE_URL}${imagePath}`
 }
@@ -18,8 +20,8 @@ export const useImageUrl = (imagePath?: string): string => {
  * @param imagePaths - Array of relative image paths
  * @returns Array of full image URLs
  */
-export const useImageUrls = (imagePaths: string[]): string[] => {
-  return imagePaths.map(path => useImageUrl(path))
+export const getImageUrls = (imagePaths: string[]): string[] => {
+  return imagePaths.map(path => getImageUrl(path))
 }
 
 /**
@@ -27,7 +29,7 @@ export const useImageUrls = (imagePaths: string[]): string[] => {
  * @param imagePaths - Array of relative image paths
  * @returns First image URL or empty string
  */
-export const useFirstImageUrl = (imagePaths: string[]): string => {
-  return useImageUrl(imagePaths[0])
+export const getFirstImageUrl = (imagePaths: string[]): string => {
+  return getImageUrl(imagePaths[0])
 }
 

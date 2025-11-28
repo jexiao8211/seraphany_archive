@@ -3,7 +3,7 @@
  * Features: main image display, thumbnail navigation, arrow controls, keyboard navigation
  */
 import React from 'react'
-import { useFirstImageUrl } from '../hooks/useImageUrl'
+import { getFirstImageUrl } from '../hooks/useImageUrl'
 import type { Product } from '../types'
 
 interface ImageGalleryProps {
@@ -39,7 +39,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ product }) => {
           className="main-image-container"
         >
           <img
-            src={useFirstImageUrl([image])}
+            src={getFirstImageUrl([image])}
             alt={`${product.name} - Image ${index + 1}`}
             className="main-image"
           />

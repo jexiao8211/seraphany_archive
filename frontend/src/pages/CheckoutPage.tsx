@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useCart } from '../contexts/CartContext'
-import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../contexts/ToastContext'
 import { createOrder } from '../services/api'
 import type { ShippingAddress } from '../types'
 
@@ -20,7 +20,7 @@ interface ShippingFormData {
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate()
   const { items, getTotalPrice, clearCart } = useCart()
-  const { user } = useAuth()
+  const { showError } = useToast()
   
   const [formData, setFormData] = useState<ShippingFormData>({
     street: '',
@@ -39,7 +39,7 @@ const CheckoutPage: React.FC = () => {
     },
     onError: (error) => {
       console.error('Failed to create order:', error)
-      alert('Failed to create order. Please try again.')
+      showError('Failed to create order. Please try again.')
     }
   })
 
@@ -102,10 +102,7 @@ const CheckoutPage: React.FC = () => {
     navigate('/cart')
   }
 
-  if (!user) {
-    navigate('/login')
-    return null
-  }
+  // Note: User check is handled by ProtectedRoute wrapper
 
   if (items.length === 0) {
     return (

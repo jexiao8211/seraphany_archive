@@ -27,10 +27,7 @@ class AuthService:
     
     @staticmethod
     def get_password_hash(password: str) -> str:
-        """Hash a password"""
-        # Truncate password to 72 bytes to avoid bcrypt limitation
-        if len(password.encode('utf-8')) > 72:
-            password = password[:72]
+        """Hash a password using pbkdf2_sha256"""
         return pwd_context.hash(password)
     
     @staticmethod

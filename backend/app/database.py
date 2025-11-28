@@ -417,10 +417,70 @@ class DatabaseService:
                 "user_id": order.user_id,
                 "total_amount": float(order.total_amount),
                 "status": order.status,
-                    "shipping_address": order.get_shipping_address(),
+                "shipping_address": order.get_shipping_address(),
                 "created_at": order.created_at.isoformat(),
                 "updated_at": order.updated_at.isoformat()
             }
+
+    # Admin operations
+    def get_all_users(self, page: int = 1, limit: int = 100) -> Dict[str, Any]:
+        """Get all users with pagination (admin only)"""
+        with self.get_session() as session:
+            # Get total count
+            count_query = select(func.count(User.id))
+            total_result = session.execute(count_query)
+            total = total_result.scalar()
+            
+            # Get paginated results
+            offset = (page - 1) * limit
+            query = select(User).order_by(User.created_at.desc()).offset(offset).limit(limit)
+            
+            result = session.execute(query)
+            users = result.scalars().all()
+            
+            users_data = []
+            for user in users:
+                users_data.append({
+                    "id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "is_admin": user.is_admin,
+                    "created_at": user.created_at.isoformat() if user.created_at else None,
+                    "updated_at": user.updated_at.isoformat() if user.updated_at else None
+                })
+            
+            return {
+                "items": users_data,
+                "total": total,
+                "page": page,
+                "limit": limit
+            }
+
+    def update_user_admin_status(self, user_id: int, is_admin: bool) -> Dict[str, Any]:
+        """Update user admin status"""
+        with self.get_session() as session:
+            query = select(User).where(User.id == user_id)
+            result = session.execute(query)
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                raise ValueError("User not found")
+            
+            user.is_admin = is_admin
+            session.commit()
+            session.refresh(user)
+            
+            return {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_admin": user.is_admin,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "updated_at": user.updated_at.isoformat() if user.updated_at else None
+            }
+
 
 # Global database service instance
 db = DatabaseService()

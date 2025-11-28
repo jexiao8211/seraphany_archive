@@ -4,7 +4,8 @@
 import React, { useState, useRef, useCallback } from 'react'
 import { uploadProductImages } from '../services/api'
 import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES, MAX_FILES_PER_UPLOAD } from '../config/constants'
-import { useImageUrl } from '../hooks/useImageUrl'
+import { getImageUrl } from '../hooks/useImageUrl'
+import { useToast } from '../contexts/ToastContext'
 
 interface ImageUploadProps {
   onImagesChange: (imagePaths: string[]) => void
@@ -32,6 +33,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { showError, showWarning } = useToast()
 
   // Handle drag events
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -66,19 +68,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     })
 
     if (validFiles.length === 0) {
-      alert(errors.join('\n'))
+      showError(errors.join('. '))
       return
     }
 
     if (errors.length > 0) {
-      alert(errors.join('\n'))
+      showWarning(errors.join('. '))
     }
 
     // Check total file limit using functional update to get current state
     setUploadedFiles(prev => {
       const totalFiles = prev.length + validFiles.length
       if (totalFiles > maxFiles) {
-        alert(`Maximum ${maxFiles} files allowed.`)
+        showWarning(`Maximum ${maxFiles} files allowed.`)
         return prev
       }
 
@@ -195,11 +197,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       setUploadedFiles([])
       
       if (response.errors && response.errors.length > 0) {
-        alert(`Some uploads failed:\n${response.errors.join('\n')}`)
+        showWarning(`Some uploads failed: ${response.errors.join('. ')}`)
       }
     } catch (error) {
       console.error('Upload failed:', error)
-      alert('Upload failed. Please try again.')
+      showError('Upload failed. Please try again.')
     } finally {
       setUploading(false)
     }
@@ -235,7 +237,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     ⋮⋮
                   </div>
                   <img 
-                    src={useImageUrl(imagePath)}
+                    src={getImageUrl(imagePath)}
                     alt={`Product ${index + 1}`}
                     className="image-preview"
                     draggable={false}

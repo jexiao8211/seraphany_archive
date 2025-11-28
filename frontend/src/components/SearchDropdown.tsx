@@ -6,7 +6,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../services/api'
-import { useFirstImageUrl } from '../hooks/useImageUrl'
+import { getFirstImageUrl } from '../hooks/useImageUrl'
 import type { Product } from '../types'
 
 interface SearchDropdownProps {
@@ -48,7 +48,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
               >
                 <div className="search-dropdown-item-image">
                   <img
-                    src={useFirstImageUrl(product.images) || '/placeholder.jpg'}
+                    src={getFirstImageUrl(product.images) || '/placeholder.jpg'}
                     alt={product.name}
                   />
                 </div>

@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getProducts } from '../services/api'
-import { useImageUrl } from '../hooks/useImageUrl'
+import { getImageUrl } from '../hooks/useImageUrl'
 import type { Product } from '../types'
 
 interface ProductListProps {
@@ -18,7 +18,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [hoveredImageIndex, setHoveredImageIndex] = useState(0)
-  const imageUrls = product.images.map(img => useImageUrl(img))
+  const imageUrls = product.images.map(img => getImageUrl(img))
   const hasMultipleImages = imageUrls.length > 1
   
   const getCurrentImage = () => {

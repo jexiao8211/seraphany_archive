@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getProduct } from '../services/api'
 import { useCart } from '../contexts/CartContext'
 import { useToast } from '../contexts/ToastContext'
-import { useFirstImageUrl } from '../hooks/useImageUrl'
+import { getFirstImageUrl } from '../hooks/useImageUrl'
 import ImageGallery from '../components/ImageGallery'
 import RelatedProducts from '../components/RelatedProducts'
 import type { Product } from '../types'
@@ -36,7 +36,7 @@ const ProductDetailPage: React.FC = () => {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: useFirstImageUrl(product.images),
+      image: getFirstImageUrl(product.images),
     })
     showSuccess('Added to cart!')
   }

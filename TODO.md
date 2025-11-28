@@ -376,6 +376,17 @@
 
 ## 🧹 **Codebase Cleanup & Refactoring** ✅ **COMPLETE**
 
+### Backend Architecture Refactoring ✅ **COMPLETE**
+- ✅ **Modular Router Structure**: Refactored monolithic `main.py` (763 lines) into clean router modules
+  - `routers/auth.py` - Authentication endpoints (login, register, logout, refresh)
+  - `routers/products.py` - Product CRUD endpoints
+  - `routers/orders.py` - Order management endpoints
+  - `routers/uploads.py` - Image upload endpoints
+  - `routers/users.py` - Admin user management endpoints
+- ✅ **Pydantic Schemas**: Created comprehensive `schemas.py` with proper validation
+- ✅ **Dependencies Module**: Centralized authentication dependencies in `dependencies.py`
+- ✅ **Clean Main.py**: Reduced to ~55 lines - just app initialization and router imports
+
 ### Configuration Management
 - ✅ **Centralized Configuration**: Created `frontend/src/config/constants.ts` and `backend/app/config.py`
 - ✅ **Environment Variables**: Added `.env.example` and proper env var support
@@ -383,8 +394,9 @@
 
 ### Type Safety & Validation
 - ✅ **TypeScript Improvements**: Fixed all `any` types, added proper interfaces
-- ✅ **Reusable Hooks**: Created `useImageUrl` hook for consistent image URL handling
+- ✅ **Image URL Utilities**: Renamed `useImageUrl` to `getImageUrl` (fixed React hooks violation)
 - ✅ **Type Definitions**: Enhanced type safety across all components
+- ✅ **Pydantic V2 Migration**: Updated schemas to use `ConfigDict` instead of deprecated `class Config`
 
 ### Error Handling & User Feedback
 - ✅ **Toast Notifications**: Replaced all `alert()` calls with professional toast system
@@ -396,10 +408,11 @@
 - ✅ **Technical Debt**: Removed unused imports, parameters, and temporary files
 - ✅ **File Cleanup**: Deleted `test_image_urls.html`, unused `App.css`
 - ✅ **Consistent Style**: Applied formatting standards across codebase
+- ✅ **Cart Persistence**: Added localStorage persistence for shopping cart
 
 ### Remaining Technical Debt
 - [ ] Add proper error handling and logging
-- [ ] Add API documentation (Swagger/OpenAPI)
+- [ ] Add API documentation (Swagger/OpenAPI) - Note: FastAPI auto-generates this at /docs
 - [ ] Optimize database queries with indexes
 - [ ] Add request validation middleware
 
@@ -421,6 +434,7 @@
 
 ---
 
-*Last Updated: January 20, 2025*
-*Total Tasks Completed: ~45 individual items*
+*Last Updated: November 28, 2025*
+*Total Tasks Completed: ~55 individual items*
 *MVP Status: ✅ COMPLETE - Ready for Production Deployment*
+*Codebase Refactoring: ✅ COMPLETE - Clean, modular architecture*

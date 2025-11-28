@@ -3,13 +3,16 @@
  */
 import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getOrder, cancelOrder } from '../services/api'
+import { useToast } from '../contexts/ToastContext'
 import type { OrderItem } from '../types'
 
 const OrderDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { showError, showSuccess } = useToast()
   const orderId = parseInt(id || '0', 10)
 
   const { data: order, isLoading, error } = useQuery({
@@ -21,12 +24,13 @@ const OrderDetailsPage: React.FC = () => {
   const cancelOrderMutation = useMutation({
     mutationFn: () => cancelOrder(orderId),
     onSuccess: () => {
+      showSuccess('Order cancelled successfully')
       // Refetch the order to get updated status
-      window.location.reload()
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] })
     },
     onError: (error) => {
       console.error('Failed to cancel order:', error)
-      alert('Failed to cancel order. Please try again.')
+      showError('Failed to cancel order. Please try again.')
     }
   })
 
