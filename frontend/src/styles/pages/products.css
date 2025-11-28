@@ -3,9 +3,20 @@
  */
 
 .products-page {
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-md);
+  width: 100%;
+  padding: var(--spacing-xl) 2rem;
+}
+
+@media (min-width: 1024px) {
+  .products-page {
+    padding: var(--spacing-xl) 3rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .products-page {
+    padding: var(--spacing-xl) 4rem;
+  }
 }
 
 .products-title {

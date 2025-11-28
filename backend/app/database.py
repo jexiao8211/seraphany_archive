@@ -417,7 +417,7 @@ class DatabaseService:
                 "user_id": order.user_id,
                 "total_amount": float(order.total_amount),
                 "status": order.status,
-                "shipping_address": order.get_shipping_address(),
+                    "shipping_address": order.get_shipping_address(),
                 "created_at": order.created_at.isoformat(),
                 "updated_at": order.updated_at.isoformat()
             }
