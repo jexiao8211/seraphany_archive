@@ -8,6 +8,13 @@ A modern full-stack e-commerce platform for archival designer clothing, built wi
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
+
+
+https://github.com/user-attachments/assets/c3bd0f1f-5bbf-4a27-b25a-306245682745
+
+
+
+
 ## ✨ Features
 
 ### Customer Features
