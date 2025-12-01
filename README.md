@@ -1,6 +1,6 @@
 # Seraphany Archive
 
-A modern full-stack e-commerce platform for vintage clothing, built with FastAPI and React.
+A modern full-stack e-commerce platform for archival designer clothing, built with FastAPI and React.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![React](https://img.shields.io/badge/React-18+-61DAFB.svg)
@@ -11,7 +11,7 @@ A modern full-stack e-commerce platform for vintage clothing, built with FastAPI
 ## ✨ Features
 
 ### Customer Features
-- 🛍️ **Product Browsing** - Browse vintage items with category filtering and search
+- 🛍️ **Product Browsing** - Browse products with category filtering and search
 - 🖼️ **Image Galleries** - Multiple product images with hover preview
 - 🛒 **Shopping Cart** - Persistent cart (survives page refresh)
 - 📦 **Order Management** - Place orders, view history, cancel pending orders
@@ -249,11 +249,4 @@ poetry run alembic downgrade -1
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ---
-
-Built with ❤️ for vintage fashion enthusiasts
-
